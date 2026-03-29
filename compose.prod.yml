@@ -1,0 +1,17 @@
+services:
+  app:
+    image: ${IMAGE_NAME}:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    command: sh -c "npx prisma migrate deploy && node server.js"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - terra
