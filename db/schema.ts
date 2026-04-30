@@ -82,7 +82,6 @@ export const customers = pgTable(
 
     firstName: varchar("first_name", { length: 100 }),
     lastName: varchar("last_name", { length: 100 }),
-    username: varchar("username", { length: 100 }),
 
     points: integer("points").notNull().default(0),
 
