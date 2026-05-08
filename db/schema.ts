@@ -40,11 +40,8 @@ export const unitOfMeasureEnum = pgEnum("unit_of_measure", [
 
 export const districts = pgTable("districts", {
   id: serial("id").primaryKey(),
-
   code: varchar("code", { length: 10 }).notNull().unique(),
-
   name: varchar("name", { length: 100 }),
-
   sortOrder: integer("sort_order"),
 });
 
@@ -54,14 +51,26 @@ export const users = pgTable("users", {
   phone: varchar("phone", { length: 20 }).notNull().unique(),
   email: varchar("email", { length: 255 }).unique(),
 
-  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+  firstName: varchar("first_name", { length: 100 }),
+  lastName: varchar("last_name", { length: 100 }),
 
   isCustomer: boolean("is_customer").notNull().default(false),
   isDriver: boolean("is_driver").notNull().default(false),
   isAdmin: boolean("is_admin").notNull().default(false),
 
+  points: integer("points").notNull().default(0),
+  isVip: boolean("is_vip").notNull().default(false),
+
+  referredById: integer("referred_by_id").references(() => users.id),
+
+  mongoId: varchar("mongo_id", { length: 50 }).unique(),
+  profileConfirmed: boolean("profile_confirmed").notNull().default(false),
+  firstOrder: boolean("first_order").notNull().default(false),
+
   otpCode: varchar("otp_code", { length: 10 }),
   otpExpiresAt: timestamp("otp_expires_at", { withTimezone: true }),
+
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
 
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
@@ -71,66 +80,17 @@ export const users = pgTable("users", {
     .defaultNow(),
 });
 
-export const customers = pgTable(
-  "customers",
-  {
-    id: serial("id").primaryKey(),
-
-    userId: integer("user_id")
-      .notNull()
-      .references(() => users.id),
-
-    firstName: varchar("first_name", { length: 100 }),
-    lastName: varchar("last_name", { length: 100 }),
-
-    points: integer("points").notNull().default(0),
-
-    isVip: boolean("is_vip").notNull().default(false),
-
-    referredById: integer("referred_by_id"),
-
-    mongoId: varchar("mongo_id", { length: 50 }).unique(),
-
-    useSafari: boolean("use_safari"),
-    isTokenInvalid: boolean("is_token_invalid"),
-    isTokenReverse: boolean("is_token_reverse"),
-    isTokenRight: boolean("is_token_right"),
-    newProfile: boolean("new_profile"),
-    profileConfirmed: boolean("profile_confirmed"),
-    firstOrder: boolean("first_order"),
-    fiveWeeksAlert: boolean("five_weeks_alert"),
-    sixWeeksAlert: boolean("six_weeks_alert"),
-    sevenWeeksAlert: boolean("seven_weeks_alert"),
-
-    limited: timestamp("limited", { withTimezone: true }),
-    fiveWeeksLimited: timestamp("five_weeks_limited", { withTimezone: true }),
-    sixWeeksLimited: timestamp("six_weeks_limited", { withTimezone: true }),
-    sevenWeeksLimited: timestamp("seven_weeks_limited", { withTimezone: true }),
-    lastLogin: timestamp("last_login", { withTimezone: true }),
-
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (table) => [uniqueIndex("customers_user_id_idx").on(table.userId)],
-);
-
-export const customerAddresses = pgTable("customer_addresses", {
+export const userAddresses = pgTable("user_addresses", {
   id: serial("id").primaryKey(),
 
-  customerId: integer("customer_id")
+  userId: integer("user_id")
     .notNull()
-    .references(() => customers.id),
+    .references(() => users.id),
 
   districtId: integer("district_id").references(() => districts.id),
 
   label: varchar("label", { length: 100 }),
-
   address: text("address").notNull(),
-
   isPrimary: boolean("is_primary").notNull().default(false),
 
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -151,7 +111,6 @@ export const drivers = pgTable(
       .references(() => users.id),
 
     name: varchar("name", { length: 100 }),
-
     active: boolean("active").notNull().default(true),
 
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -178,19 +137,12 @@ export const productTiers = pgTable("product_tiers", {
     .references(() => categoryGroups.id),
 
   name: varchar("name", { length: 100 }).notNull(),
-
   packSize: integer("pack_size").notNull().default(1),
-
   unitOfMeasure: unitOfMeasureEnum("unit_of_measure"),
-
   shownAs: varchar("shown_as", { length: 50 }),
-
   procurementCost: numeric("procurement_cost", { precision: 10, scale: 2 }),
-
   giftablePoints: integer("giftable_points").notNull().default(0),
-
   discountPct: numeric("discount_pct", { precision: 5, scale: 2 }),
-
   sortOrder: integer("sort_order"),
 });
 
@@ -202,51 +154,35 @@ export const products = pgTable("products", {
     .references(() => productTiers.id),
 
   name: varchar("name", { length: 255 }).notNull(),
-
   originalName: varchar("original_name", { length: 255 }),
-
   description: text("description"),
   imgUrl: text("img_url"),
-
   type: productTypeEnum("type"),
-
   topEffect: varchar("top_effect", { length: 100 }),
   topFlavour: varchar("top_flavour", { length: 100 }),
-
   priceTag: varchar("price_tag", { length: 50 }),
-
   basePriceCents: integer("base_price_cents"),
-
   procurementCost: numeric("procurement_cost", { precision: 10, scale: 2 }),
-
   discountPct: numeric("discount_pct", { precision: 5, scale: 2 }),
-
   stock: integer("stock").notNull().default(0),
-
   active: boolean("active").notNull().default(true),
-
   onSale: boolean("on_sale").notNull().default(false),
-
   totalSold: integer("total_sold").notNull().default(0),
-
   giftablePoints: integer("giftable_points").notNull().default(0),
-
   externalId: varchar("external_id", { length: 100 }).unique(),
 });
 
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
 
-  customerId: integer("customer_id")
+  userId: integer("user_id")
     .notNull()
-    .references(() => customers.id),
+    .references(() => users.id),
 
   districtId: integer("district_id").references(() => districts.id),
 
   address: text("address"),
-
   orderNumber: integer("order_number"),
-
   status: orderStatusEnum("status").notNull().default("pending"),
 
   deliveryDate: timestamp("delivery_date", { withTimezone: true }),
@@ -269,7 +205,6 @@ export const orders = pgTable("orders", {
   isUsePoint: boolean("is_use_point").notNull().default(false),
 
   comment: text("comment"),
-
   productsData: jsonb("products_data"),
   userInfo: jsonb("user_info"),
 
@@ -309,12 +244,9 @@ export const deliverySchedules = pgTable("delivery_schedules", {
     .references(() => districts.id),
 
   dayOfWeek: integer("day_of_week").notNull(),
-
   windowNumber: integer("window_number").notNull().default(1),
-
   windowStart: varchar("window_start", { length: 10 }),
   windowEnd: varchar("window_end", { length: 10 }),
-
   routeOrder: integer("route_order"),
 });
 
@@ -322,27 +254,21 @@ export const operatingCalendar = pgTable("operating_calendar", {
   id: serial("id").primaryKey(),
 
   calendarDate: date("calendar_date").notNull().unique(),
-
   isOpen: boolean("is_open").notNull().default(true),
-
   salePct: numeric("sale_pct", { precision: 5, scale: 2 }),
-
   pointsMultiplier: numeric("points_multiplier", { precision: 4, scale: 2 }),
-
   notes: text("notes"),
 });
 
 export const pointTransactions = pgTable("point_transactions", {
   id: serial("id").primaryKey(),
 
-  customerId: integer("customer_id")
+  userId: integer("user_id")
     .notNull()
-    .references(() => customers.id),
+    .references(() => users.id),
 
   amount: integer("amount").notNull(),
-
   reason: varchar("reason", { length: 100 }).notNull(),
-
   orderId: integer("order_id").references(() => orders.id),
 
   createdAt: timestamp("created_at", { withTimezone: true })
