@@ -1,7 +1,7 @@
 import { createTRPCRouter, publicProcedure } from "../init";
 import { z } from "zod";
 import { db } from "@/db";
-import { users, customers } from "@/db/schema";
+import { users } from "@/db/schema";
 
 export const usersRouter = createTRPCRouter({
   create: publicProcedure
@@ -13,21 +13,15 @@ export const usersRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input }) => {
-      const newUser = await db.transaction(async (tx) => {
-        const [user] = await tx
-          .insert(users)
-          .values({ phone: input.phone })
-          .returning();
-
-        await tx.insert(customers).values({
-          userId: user.id,
+      const [user] = await db
+        .insert(users)
+        .values({
+          phone: input.phone,
           firstName: input.firstName,
           lastName: input.lastName,
-        });
+        })
+        .returning();
 
-        return user;
-      });
-
-      return newUser;
+      return user;
     }),
 });
