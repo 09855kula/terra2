@@ -1,9 +1,9 @@
-import { createTRPCRouter, publicProcedure } from "../init";
+import { router, publicProcedure } from "../init";
 import { z } from "zod";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 
-export const usersRouter = createTRPCRouter({
+export const usersRouter = router({
   create: publicProcedure
     .input(
       z.object({
