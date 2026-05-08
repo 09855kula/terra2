@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
-import { users, customers } from "@/db/schema";
+import { users } from "@/db/schema";
 
 const createUserSchema = z.object({
   phone: z.string().min(10).max(20),
@@ -26,10 +26,6 @@ export async function POST(request: Request) {
   try {
     const newUser = await db.transaction(async (tx) => {
       const [user] = await tx.insert(users).values({ phone }).returning();
-
-      await tx
-        .insert(customers)
-        .values({ userId: user.id, firstName, lastName });
 
       return user;
     });
