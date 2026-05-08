@@ -12,7 +12,7 @@ import {
   jsonb,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
-
+import { type AnyPgColumn } from "drizzle-orm/pg-core";
 export const orderStatusEnum = pgEnum("order_status", [
   "pending",
   "accepted",
@@ -61,7 +61,9 @@ export const users = pgTable("users", {
   points: integer("points").notNull().default(0),
   isVip: boolean("is_vip").notNull().default(false),
 
-  referredById: integer("referred_by_id").references(() => users.id),
+  referredById: integer("referred_by_id").references(
+    (): AnyPgColumn => users.id,
+  ),
 
   mongoId: varchar("mongo_id", { length: 50 }).unique(),
   profileConfirmed: boolean("profile_confirmed").notNull().default(false),
