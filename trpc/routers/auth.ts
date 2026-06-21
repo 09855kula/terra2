@@ -21,7 +21,7 @@ export const authRouter = router({
         });
       }
 
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const code = Math.floor(1000 + Math.random() * 9000).toString();
 
       const expiry = new Date(Date.now() + 10 * 60 * 1000);
       await db
@@ -40,7 +40,7 @@ export const authRouter = router({
         code: z.string(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const user = await db.query.users.findFirst({
         where: eq(users.phone, input.phone),
       });
@@ -71,10 +71,17 @@ export const authRouter = router({
         .set({ otpExpiresAt: null, otpCode: null })
         .where(eq(users.id, user.id));
 
+      const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
       const token = await new SignJWT({ userId: user.id })
         .setProtectedHeader({ alg: "HS256" })
         .setExpirationTime("7d")
         .sign(secret);
+
+      const isProd = process.env.NODE_ENV === "production";
+      ctx.resHeaders.set(
+        "Set-Cookie",
+        `token=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=604800${isProd ? "; Secure" : ""}`,
+      );
 
       return { success: true };
     }),

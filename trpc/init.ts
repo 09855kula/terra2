@@ -1,7 +1,13 @@
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 
-const t = initTRPC.create({
+export async function createContext() {
+  return { resHeaders: new Headers() };
+}
+
+export type Context = Awaited<ReturnType<typeof createContext>>;
+
+const t = initTRPC.context<Context>().create({
   transformer: superjson,
 });
 
