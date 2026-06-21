@@ -1,0 +1,15 @@
+stages:
+  - name: Publish image
+    steps:
+    - publishImageConfig:
+        dockerfilePath: ./Dockerfile
+        buildContext: .
+        tag: anybotsllc/e-commerce-services-${CICD_GIT_REPO_NAME}:${CICD_GIT_BRANCH}
+        pushRemote: true
+        registry: index.docker.io
+  - name: Deploy some workloads
+    steps:
+    - applyYamlConfig:
+        path: ./deployment.yaml
+branch:
+  include: [ main ]

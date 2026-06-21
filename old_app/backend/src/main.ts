@@ -1,0 +1,31 @@
+import {NestFactory} from '@nestjs/core';
+import {AppModule} from './app.module';
+import {ConfigService} from "@nestjs/config";
+import {MicroserviceOptions, Transport} from "@nestjs/microservices";
+const cors = require('cors')
+async function start() {
+    const app = await NestFactory.create(AppModule);
+    const config = await app.get(ConfigService)
+    const port = config.get<number>('API_PORT')
+    const urlRMQ = process.env.URL_RMQ
+    const API_host = process.env.API_host
+    process.on('unhandledRejection', (reason, promise) => {
+        console.log('Unhandled Rejection at:', promise, 'reason:', reason);
+        // Application specific logging, throwing an error, or other logic here
+    });
+    app.connectMicroservice<MicroserviceOptions>({
+        transport: Transport.RMQ,
+        options: {
+            urls: [urlRMQ],
+            queue: 'routes_queue',
+        },
+    })
+    app.use(cors());
+    await app.listen(port || 3002, () => {
+        console.log(`🚀 Server ready at ${API_host}${port}/api/graphql`)
+        console.log(`🚀 Microservice start at ${urlRMQ}`)
+    });
+    await app.startAllMicroservices()
+}
+
+start();

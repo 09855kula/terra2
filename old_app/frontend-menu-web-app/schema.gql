@@ -1,0 +1,1084 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type CostsType {
+  cost: Float
+  unit: Float
+}
+
+type NotificationsType {
+  title: String
+  description: String
+  created: String
+}
+
+type NotificationType {
+  five_week_expired: DateTime
+  seven_week_expired: DateTime
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Next_order_discountType {
+  amount: Float
+  start_date: DateTime
+}
+
+type GiftPairsType {
+  id: String
+  gift_holder: String
+  is_gift: String
+  name: String
+  cost: Float
+}
+
+type UserProductsType {
+  name: String
+  pack: Float
+  measure: String
+  category: String
+  id: String
+  img_url: String
+  group: String
+  cost: Float
+  count: Float
+  costs: [CostsType]!
+  got_gift_pairs: GiftPairsType
+}
+
+type CommentsType {
+  role: String
+  user_id: Float
+  text: String
+  image: String
+  isRead: Boolean
+  created: String
+}
+
+type CartsType {
+  products: [UserProductsType!]
+  id: String
+  status: String
+  created: DateTime
+  updated: DateTime
+  address: String
+  products_list: [String]!
+  delivery_date: String
+  timeslot: String
+  cut_offs: String
+  total_after_discount: Float
+  comments: [CommentsType!]
+}
+
+type UserType {
+  id: Float
+  first_name: String
+  last_name: String
+  phone: String
+  username: String
+  role: String
+  first_order: Boolean
+  is_vip: Boolean
+  points: Float
+  created: DateTime
+  updated: DateTime
+  referral_code: String
+  orders: [Float!]
+  tokens: [Float!]
+  token: Float
+  profiles: [Float]!
+  inventory: String
+  route: String
+  last_profile: Float
+  profile_confirmed: Boolean
+  phones: [String]!
+  addresses: [String]!
+  limited: DateTime
+  cart: CartsType
+  comments: [CommentsType]!
+  notifications: NotificationsType
+  notification: NotificationType
+  next_order_discount: Next_order_discountType
+  new_profile: Boolean!
+  use_safari: Boolean
+  is_token_right: Boolean!
+  is_token_reverse: Boolean!
+  is_token_invalid: Boolean!
+}
+
+type ProductType {
+  active: Boolean
+  name: String
+  description: String
+  img_url: String
+  category: String
+  hit: Boolean
+  id: ID
+  available: Float
+  top_effect: String
+  top_flavour: String
+  price_tag: String
+  type: String
+}
+
+type SchedulesType {
+  id: String
+  product_sheet: String
+  mode: String
+  alone: Boolean
+  drivers: [String!]!
+}
+
+type ReservedInventoriesType {
+  id: String!
+  count: Float!
+}
+
+type SoldInventoriesType {
+  id: String!
+  count: Float!
+}
+
+type ProductsInventoriesType {
+  id: String!
+  count: Float!
+  name: String!
+  category: String!
+}
+
+type InventoriesType {
+  id: String!
+  created: DateTime!
+  owner_id: String!
+  driver_id: String!
+  products: [ProductsInventoriesType!]!
+  reserved: [ReservedInventoriesType!]!
+  sold: [SoldInventoriesType!]!
+  notified: [String!]!
+  orders: [Float!]!
+  inventories_for_web: Boolean!
+  working: Boolean!
+}
+
+type ProductListType {
+  id: String
+  count: Float
+}
+
+type CommentsOrderType {
+  user_id: Float
+  text: String
+  image: String
+  isRead: Boolean
+  created: DateTime
+  role: String!
+}
+
+type UsedDiscountType {
+  amount: Float
+  informed: Boolean
+  start_date: DateTime
+}
+
+type GiftPairsOrderType {
+  id: String
+  gift_holder: String
+  is_gift: String
+}
+
+type GiftsType {
+  gift_of: String
+  id: String
+  name: String
+  amount: Float
+}
+
+type OrderBonusesType {
+  costs: Float
+  gifts: [GiftsType]!
+}
+
+type OrderType {
+  id: String
+  user: UserType!
+  driver_id: String
+  products: [UserProductsType]!
+  inventory: String
+  product_list: [ProductListType]!
+  total: Float
+  total_after_discount: Float
+  profile: Float
+  phone: String
+  address: String
+  district: String
+  comments: [CommentsOrderType!]
+  created: DateTime
+  updated: DateTime
+  confirmed: DateTime
+  approved: DateTime
+  timeslot: String
+  cut_offs: String
+  delivery_date: String
+  customer_rating: Float
+  customer_comment: String
+  driver_rating: Float
+  driver_comment: String
+  change: String
+  status: String
+  used_discount: UsedDiscountType
+  pending_expired: Boolean
+  got_gift_pairs: [GiftPairsOrderType!]
+  gift_product: String
+  order_bonuses: OrderBonusesType
+  is_use_point: Boolean
+  isClose: Boolean
+  products_id: [String!]
+  isWeb: Boolean
+}
+
+type CostCategoriesType {
+  unit: Float
+  cost: Float
+}
+
+type GiftCategoriesType {
+  active: Boolean
+  gift_group: String
+  gift_category: String
+}
+
+type CategoriesType {
+  name: String
+  group: String
+  index: Float
+  costs: [CostCategoriesType]!
+  pack: Float
+  giftable: Boolean
+  sativa: Boolean
+  indica: Boolean
+  lso: Boolean
+  effect: String
+  measure: String
+  got_gift: GiftCategoriesType
+  pic_url: String
+}
+
+type ProfilesType {
+  id: String
+  address: String
+  district: String
+  phone: String
+  friend: String
+  user_id: Float
+  token_id: Float
+  special_instructions: String
+  created: String
+  updated: String
+  approved: String
+  status: String
+  comment: String
+}
+
+type RoutesResponseFromDistrictsType {
+  timeslot: String
+  weekday: String
+  cutOff: String
+}
+
+type CutOffsType {
+  Monday: String
+  Tuesday: String
+  Wednesday: String
+  Thursday: String
+  Friday: String
+  Saturday: String
+  Sunday: String
+}
+
+type PointType {
+  index: Int
+  district: String
+  timeslot: String
+  weekday: String
+}
+
+type RouteType {
+  name: String
+  id: String
+  cut_offs: CutOffsType
+  cut_offs_2: CutOffsType
+  points: [PointType]!
+}
+
+type CommentsTokenType {
+  user_id: Float
+  text: String
+  created: String
+}
+
+type TokenType {
+  owner_tg_user_id: Float
+  id: String
+  code: String
+  comments: CommentsTokenType
+  created: DateTime
+  updated: DateTime
+  approved: DateTime
+  role: String
+  status: String
+  profile: Float
+  referral_tg_users_ids: Float
+}
+
+type DataType {
+  last_message_from_side: String
+  phone: String
+  last_message_id: String
+  current_group: String
+  current_category: String
+  notified_about_freebie: Float
+  current_order: Float
+  profile_for_route: String
+  profile_address: String
+  profile_phone: String
+  profile_instructions: String
+  current_profile: Float
+}
+
+type EntrysessionsType {
+  entry_id: String
+  platform_id: String
+  user_id: String
+  state_id: String
+  lang: String
+  data: DataType
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+type MessagesType {
+  message_id: String
+  chat_id: String
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type Query {
+  getUser(phone: String!): UserType
+  getNewUser(id: Float!): UserType
+  getUserNotification(phone: String!): NotificationsType
+  getUserComments(phone: String!): [CommentsType!]
+  getUsers: [UserType]!
+  getProducts: [ProductType]!
+  getProduct(id: String!): ProductType
+  getProductsById(ids: [String!]!): [ProductType]!
+  getSchedule(id: String!): SchedulesType
+  getSchedules: [SchedulesType]!
+  getInventory(id: String!): InventoriesType
+  getInventories: [InventoriesType]!
+  getCategory(index: Float!): CategoriesType
+  getCategories: [CategoriesType]!
+  getProfile(user_id: Float!): [ProfilesType]!
+  getLastProfile(id: String!): ProfilesType
+  getRoutesByDistrictFromProfile(id: String!): [RoutesResponseFromDistrictsType!]
+  getProfiles: [ProfilesType]!
+  getImportRoutes: [RouteType]!
+  getRoutes: [RouteType]!
+  getRoute(id: String!): RouteType
+  getOrder(id: String!): OrderType
+  getDraftOrders(phone: String!): OrderType
+  getComments(phone: String!): [CommentsOrderType!]
+  getAllOrders(phone: String!): [OrderType]!
+  getToken(id: String!): TokenType
+  getTokens: [TokenType]!
+  getEntrysession(entry_id: String, platform_id: String, user_id: String): EntrysessionsType
+  getEntrysessions: [EntrysessionsType]!
+  getMessage(message_id: String!): MessagesType
+  getMessages: [MessagesType]!
+}
+
+type Mutation {
+  createUser(input: createUserInput!): UserType!
+  referFriend(input: referFriendInput!): UserType!
+  setUserFirstName(input: setUserFirstNameInput!): UserType!
+  newProfileFalse(input: SetNewProfileFalseInput!): UserType!
+  setUseSafari(input: SetUserUseSafariInput!): UserType!
+  confirmUser(input: confirmUserPhoneInput!): UserType!
+  setUserCommentRead(input: loginUserInput!): [CommentsType!]!
+  addAddress(input: addUserAddressInput!): UserType!
+  updateUser(input: updateUserInput!): UserType!
+  deleteUser(input: deleteUserInput!): UserType!
+  login(phone: loginUserInput!): UserType!
+  userComments(input: createUserCommentsInput!): [CommentsType!]!
+  setUserNotification(input: setUserNotificationsInput!): NotificationsType!
+  createProduct(input: createProductInput!): ProductType!
+  removeProduct(input: deleteProductInput!): ProductType
+  updateProduct(input: updateProductInput!): ProductType!
+  createSchedule(input: createSchedulesInput!): SchedulesType!
+  updateSchedule(input: updateScheduleInput!): SchedulesType!
+  deleteSchedule(input: deleteScheduleInput!): SchedulesType!
+  createInventory(input: createInventoriesInput!): InventoriesType!
+  updateInventory(input: updateInventoriesInput!): InventoriesType!
+  deleteInventory(input: deleteInventoriesInput!): InventoriesType!
+  createCategory(input: createCategoriesInput!): CategoriesType!
+  updateCategory(input: updateCategoriesInput!): CategoriesType!
+  deleteCategory(input: deleteCategoryInput!): CategoriesType!
+  createProfile(input: createProfileInput!): ProfilesType!
+  changeProfile(input: createProfileInput!): ProfilesType!
+  changeUserPhone(input: changeUserPhoneInput!): ProfilesType!
+  updateProfile(input: updateProfileInput!): ProfilesType!
+  updateInstruction(input: updateInstructionsInput!): ProfilesType!
+  deleteProfile(input: deleteProfileInput!): ProfilesType!
+  createRoute(input: createRouteInput!): RouteType!
+  removeRoute(input: deleteRouteInput!): RouteType
+  updateRoute(input: updateRouteInput!): RouteType!
+  createUserOrder(input: createOrderInput!): OrderType!
+  updateOrder(input: updateOrderInput!): OrderType!
+  deleteOrder(input: deleteOrderInput!): OrderType!
+  createToken(input: createTokenInput!): TokenType!
+  updateToken(input: updateTokenInput!): TokenType!
+  deleteToken(input: deleteTokenInput!): TokenType!
+  createEntrysession(input: createEntrysessionInput!): EntrysessionsType!
+  updateEntrysession(input: updateEntrysessionInput!): EntrysessionsType!
+  deleteEntrysession(input: deleteEntrysessionInput!): EntrysessionsType!
+  createMessage(input: createMessageInput!): MessagesType!
+  updateMessage(input: updateMessageInput!): MessagesType!
+  deleteMessage(input: deleteMessagesInput!): MessagesType!
+}
+
+input createUserInput {
+  id: Float
+  first_name: String
+  last_name: String
+  phone: String
+  username: String
+  role: String
+  first_order: Boolean
+  is_vip: Boolean
+  points: Float
+  created: DateTime
+  updated: DateTime
+  referral_code: String
+  orders: [Float]!
+  tokens: [Float]!
+  token: Float
+  profiles: [Float]!
+  inventory: String
+  route: String
+  last_profile: Float
+  profile_confirmed: Boolean
+  phones: [String]!
+  addresses: [String]!
+  limited: DateTime
+  cart: CartsInput
+  comments: [CommentsInput]!
+  notifications: NotificationsInput
+  notification: NotificationInput
+  next_order_discount: Next_order_discountInput
+  new_profile: Boolean!
+}
+
+input CartsInput {
+  products: [UserProductsInput]!
+  id: String
+  status: String
+  created: DateTime
+  products_list: [String]!
+  updated: DateTime
+  address: String
+  delivery_date: String
+  timeslot: String
+  cut_offs: String
+  total_after_discount: Float
+  comments: [CommentsInput]!
+}
+
+input UserProductsInput {
+  name: String
+  pack: Float
+  measure: String
+  category: String
+  id: String
+  img_url: String
+  group: String
+  cost: Float
+  count: Float
+  costs: [CostsInput]!
+  got_gift_pairs: GiftPairsInput
+}
+
+input CostsInput {
+  cost: Float
+  unit: Float
+}
+
+input GiftPairsInput {
+  id: String
+  gift_holder: String
+  is_gift: String
+  name: String
+  cost: Float
+}
+
+input CommentsInput {
+  role: String
+  user_id: Float
+  text: String
+  image: String
+  isRead: Boolean
+  created: String
+}
+
+input NotificationsInput {
+  title: String
+  description: String
+  created: DateTime
+}
+
+input NotificationInput {
+  five_week_expired: DateTime
+  seven_week_expired: DateTime
+}
+
+input Next_order_discountInput {
+  amount: Float
+  start_date: DateTime
+}
+
+input referFriendInput {
+  phone: String
+  address_friend: String
+  phone_friend: String
+}
+
+input setUserFirstNameInput {
+  phone: String
+  first_name: String
+}
+
+input SetNewProfileFalseInput {
+  phone: String
+}
+
+input SetUserUseSafariInput {
+  phone: String
+}
+
+input confirmUserPhoneInput {
+  phone: String
+  token: Float
+}
+
+input loginUserInput {
+  phone: String!
+}
+
+input addUserAddressInput {
+  phone: String
+  address: String
+}
+
+input updateUserInput {
+  id: Float
+  first_name: String
+  last_name: String
+  phone: String
+  username: String
+  role: String
+  first_order: Boolean
+  is_vip: Boolean
+  points: Float
+  created: DateTime
+  updated: DateTime
+  referral_code: String
+  orders: [Float]!
+  tokens: [Float]!
+  token: Float
+  profiles: [Float]!
+  inventory: String
+  route: String
+  last_profile: Float
+  profile_confirmed: Boolean
+  phones: [String]!
+  addresses: [String]!
+  limited: DateTime
+  cart: CartsInputType
+  comments: [CommentsInputType]!
+  notifications: NotificationsInputType
+  notification: NotificationInputType
+  next_order_discount: Next_order_discountInputType
+  new_profile: Boolean!
+}
+
+input CartsInputType {
+  products: [UserProductsInputType]!
+  id: String
+  status: String
+  products_list: [String]!
+  created: DateTime
+  updated: DateTime
+  address: String
+  delivery_date: String
+  timeslot: String
+  cut_offs: String
+  total_after_discount: Float
+  comments: [CommentsInputType]!
+}
+
+input UserProductsInputType {
+  name: String
+  pack: Float
+  measure: String
+  category: String
+  id: String
+  img_url: String
+  group: String
+  cost: Float
+  count: Float
+  costs: [CostsInputType]!
+  got_gift_pairs: GiftPairsInputType
+}
+
+input CostsInputType {
+  cost: Float
+  unit: Float
+}
+
+input GiftPairsInputType {
+  id: String
+  gift_holder: String
+  is_gift: String
+  name: String
+  cost: Float
+}
+
+input CommentsInputType {
+  role: String
+  user_id: Float
+  text: String
+  image: String
+  isRead: Boolean
+  created: String
+}
+
+input NotificationsInputType {
+  title: String
+  description: String
+  created: DateTime
+}
+
+input NotificationInputType {
+  five_week_expired: DateTime
+  seven_week_expired: DateTime
+}
+
+input Next_order_discountInputType {
+  amount: Float
+  start_date: DateTime
+}
+
+input deleteUserInput {
+  id: Float!
+}
+
+input createUserCommentsInput {
+  user_id: Float
+  text: String
+  role: String
+  image: String
+}
+
+input setUserNotificationsInput {
+  phone: String
+  title: String
+  description: String
+}
+
+input createProductInput {
+  active: Boolean
+  name: String
+  description: String
+  img_url: String
+  category: String
+  hit: Boolean
+  id: ID
+}
+
+input deleteProductInput {
+  id: String!
+}
+
+input updateProductInput {
+  active: Boolean!
+  name: String!
+  description: String!
+  img_url: String!
+  category: String!
+  hit: Boolean
+  id: ID!
+}
+
+input createSchedulesInput {
+  id: String
+  product_sheet: String
+  mode: String
+  alone: Boolean
+  drivers: [String!]!
+}
+
+input updateScheduleInput {
+  id: String!
+  product_sheet: String!
+  mode: String!
+  alone: Boolean!
+  drivers: [String!]!
+}
+
+input deleteScheduleInput {
+  id: String!
+}
+
+input createInventoriesInput {
+  id: String!
+  created: DateTime!
+  owner_id: String!
+  products: [ProductsInventoriesInput!]!
+  reserved: [ReservedInventoriesInput!]!
+  sold: [SoldInventoriesInput!]!
+  notified: [String!]!
+  orders: [Float!]!
+}
+
+input ProductsInventoriesInput {
+  id: String!
+  count: Float!
+}
+
+input ReservedInventoriesInput {
+  id: String!
+  count: Float!
+}
+
+input SoldInventoriesInput {
+  id: String!
+  count: Float!
+}
+
+input updateInventoriesInput {
+  id: String!
+  created: DateTime!
+  owner_id: String!
+  products: [updateProductsInventoriesInput!]!
+  reserved: [updateReservedInventoriesInput!]!
+  sold: [updateSoldInventoriesInput!]!
+  notified: [String!]!
+  orders: [Float!]!
+}
+
+input updateProductsInventoriesInput {
+  id: String!
+  count: Float!
+}
+
+input updateReservedInventoriesInput {
+  id: String!
+  count: Float!
+}
+
+input updateSoldInventoriesInput {
+  id: String!
+  count: Float!
+}
+
+input deleteInventoriesInput {
+  id: String!
+}
+
+input createCategoriesInput {
+  name: String
+  group: String
+  index: Float
+  costs: CreateCostCategoriesInput
+  pack: Float
+  giftable: Boolean
+  sativa: Boolean
+  indica: Boolean
+  lso: Boolean
+  effect: String
+  measure: String
+  got_gift: CreateGiftCategoriesInput
+  pic_url: String
+}
+
+input CreateCostCategoriesInput {
+  unit: Float
+  cost: Float
+}
+
+input CreateGiftCategoriesInput {
+  active: Boolean
+  gift_group: String
+  gift_category: String
+}
+
+input updateCategoriesInput {
+  name: String
+  group: String
+  index: Float
+  costs: UpdateCostCategoriesInput
+  pack: Float
+  giftable: Boolean
+  sativa: Boolean
+  indica: Boolean
+  lso: Boolean
+  effect: String
+  measure: String
+  got_gift: UpdateGiftCategoriesInput
+  pic_url: String
+}
+
+input UpdateCostCategoriesInput {
+  unit: Float
+  cost: Float
+}
+
+input UpdateGiftCategoriesInput {
+  active: Boolean
+  gift_group: String
+  gift_category: String
+}
+
+input deleteCategoryInput {
+  index: Float!
+}
+
+input createProfileInput {
+  address: String
+  phone: String
+  special_instructions: String
+}
+
+input changeUserPhoneInput {
+  user_id: Float!
+  phone: String!
+}
+
+input updateProfileInput {
+  id: String
+  address: String
+  district: String
+  phone: String
+  user_id: Float
+  token_id: Float
+  special_instructions: String
+  created: String
+  updated: String
+  approved: String
+  status: String
+  comment: String
+}
+
+input updateInstructionsInput {
+  id: String
+  special_instructions: String
+}
+
+input deleteProfileInput {
+  id: String!
+}
+
+input createRouteInput {
+  name: String
+  id: String
+  cut_offs: CreateCutOffsInput
+  cut_offs_2: CreateCutOffsInput
+  points: [CreatePointInput]!
+}
+
+input CreateCutOffsInput {
+  Monday: String
+  Tuesday: String
+  Wednesday: String
+  Thursday: String
+  Friday: String
+  Saturday: String
+  Sunday: String
+}
+
+input CreatePointInput {
+  index: Int
+  district: String
+  timeslot: String
+  weekday: String
+}
+
+input deleteRouteInput {
+  id: String!
+}
+
+input updateRouteInput {
+  name: String!
+  id: String!
+}
+
+input createOrderInput {
+  products: [ProductResponseInput]!
+  phone: String
+  delivery: Delivery
+}
+
+input ProductResponseInput {
+  name: String
+  category: String
+  cost: Float
+  pack: Float
+  img_url: String
+  measure: String
+  id: String
+  group: String
+  count: Float
+  costs: [Costs]!
+}
+
+input Costs {
+  unit: Float
+  cost: Float
+}
+
+input Delivery {
+  date: String
+  timeslot: String
+  cut_offs: String
+  address: String
+  district: String
+  customer_comment: String
+  change: String
+  total: Float
+  total_after_discount: Float
+  used_discount: UsedDiscount
+}
+
+input UsedDiscount {
+  amount: Float
+  informed: Boolean
+  start_date: String
+}
+
+input updateOrderInput {
+  products: [ProductUpdateInput]!
+  phone: String
+  id: String!
+}
+
+input ProductUpdateInput {
+  name: String
+  category: String
+  cost: Float
+  pack: Float
+  img_url: String
+  measure: String
+  id: String
+  group: String
+  count: Float
+  costs: [CostsUpdateType]!
+}
+
+input CostsUpdateType {
+  unit: Float
+  cost: Float
+}
+
+input deleteOrderInput {
+  id: String!
+  phone: String!
+}
+
+input createTokenInput {
+  owner_tg_user_id: Float
+  id: String
+  code: String
+  comments: CreateCommentsTokenInput
+  created: DateTime
+  updated: DateTime
+  approved: DateTime
+  role: String
+  status: String
+  profile: Float
+  referral_tg_users_ids: Float
+}
+
+input CreateCommentsTokenInput {
+  user_id: Float
+  text: String
+  created: String
+}
+
+input updateTokenInput {
+  owner_tg_user_id: Float
+  id: String
+  code: String
+  comments: UpdateCommentsTokenInput
+  created: DateTime
+  updated: DateTime
+  approved: DateTime
+  role: String
+  status: String
+  profile: Float
+  referral_tg_users_ids: Float
+}
+
+input UpdateCommentsTokenInput {
+  user_id: Float
+  text: String
+  created: String
+}
+
+input deleteTokenInput {
+  id: String!
+}
+
+input createEntrysessionInput {
+  entry_id: String
+  platform_id: String
+  user_id: String
+  state_id: String
+  lang: String
+}
+
+input updateEntrysessionInput {
+  entry_id: String
+  platform_id: String
+  user_id: String
+}
+
+input deleteEntrysessionInput {
+  user_id: String!
+}
+
+input createMessageInput {
+  message_id: String!
+  chat_id: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input updateMessageInput {
+  message_id: String!
+  chat_id: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input deleteMessagesInput {
+  message_id: String!
+}
+
+type Subscription {
+  userMessage: [CommentsType!]!
+  userNotification: NotificationsType!
+  messages: CommentsOrderType!
+}

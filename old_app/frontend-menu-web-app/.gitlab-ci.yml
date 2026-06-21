@@ -1,0 +1,51 @@
+image: docker:latest
+
+
+services:
+  - docker:dind
+
+
+stages:
+  - build_main
+  - deploy_main
+  - build_dev
+  - deploy_dev
+
+
+build_main:
+  stage: build_main
+  only:
+    - main
+  script:
+    - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD
+    - docker build -t $ORG_NAMESPACE/$CI_PROJECT_NAMESPACE-$CI_PROJECT_NAME:main .
+    - docker push $ORG_NAMESPACE/$CI_PROJECT_NAMESPACE-$CI_PROJECT_NAME:main
+
+
+deploy_main:
+  stage: deploy_main
+  image: cdrx/rancher-gitlab-deploy
+  only:
+    - main
+  script:
+    - upgrade --environment botshop-production --stack terra-prod --service frontend-menu-web-app --new-image $ORG_NAMESPACE/$CI_PROJECT_NAMESPACE-$CI_PROJECT_NAME:main --create
+
+
+build_dev:
+  stage: build_dev
+  only:
+    - dev
+  script:
+    - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_PASSWORD
+    - docker build -t $ORG_NAMESPACE/$CI_PROJECT_NAMESPACE-$CI_PROJECT_NAME:dev .
+    - docker push $ORG_NAMESPACE/$CI_PROJECT_NAMESPACE-$CI_PROJECT_NAME:dev
+
+
+deploy_dev:
+  stage: deploy_dev
+  image: cdrx/rancher-gitlab-deploy
+  only:
+    - dev
+  script:
+    - upgrade --environment botshop-production --stack terra-dev --service frontend-menu-web-app --new-image $ORG_NAMESPACE/$CI_PROJECT_NAMESPACE-$CI_PROJECT_NAME:dev --create
+
