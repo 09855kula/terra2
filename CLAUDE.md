@@ -224,7 +224,7 @@ Tables:
 |---|---|---|
 | M0 | Infrastructure (Docker, repo, env) | Complete |
 | M1 | Backend foundation (schema, tRPC, auth) | In progress |
-| M2 | Data migration (MongoDB -> Postgres) | Pending |
+| M2 | Data migration (MongoDB -> Postgres) | In Progress |
 | M3 | UI rebuild (VPS provisioning at start) | Pending |
 | M4 | Cart & checkout | Pending |
 | M5 | Order management | Pending |
