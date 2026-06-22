@@ -34,8 +34,12 @@ export default function CheckoutPage() {
     onError: (e) => setError(e.message),
   });
 
-  const windows = getAvailableWindows(schedules);
   const addresses = me?.addresses ?? [];
+  const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
+  const districtSchedules = selectedAddress?.districtId
+    ? schedules.filter((s) => s.districtId === selectedAddress.districtId)
+    : schedules;
+  const windows = getAvailableWindows(districtSchedules);
 
   const handlePlaceOrder = () => {
     if (!selectedAddressId || !selectedWindow) return;

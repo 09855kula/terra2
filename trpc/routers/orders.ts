@@ -17,6 +17,7 @@ export const ordersRouter = router({
         dayOfWeek: deliverySchedules.dayOfWeek,
         windowStart: deliverySchedules.windowStart,
         windowEnd: deliverySchedules.windowEnd,
+        districtId: deliverySchedules.districtId,
       })
       .from(deliverySchedules);
   }),

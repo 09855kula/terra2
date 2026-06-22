@@ -6,12 +6,18 @@ import { users } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import { SignJWT } from "jose";
 
+function normalizePhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  return `+${digits}`;
+}
+
 export const authRouter = router({
   requestOtp: publicProcedure
     .input(z.object({ phone: z.string() }))
     .mutation(async ({ input }) => {
+      const phone = normalizePhone(input.phone);
       const user = await db.query.users.findFirst({
-        where: eq(users.phone, input.phone),
+        where: eq(users.phone, phone),
       });
 
       if (!user) {
@@ -41,8 +47,9 @@ export const authRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
+      const phone = normalizePhone(input.phone);
       const user = await db.query.users.findFirst({
-        where: eq(users.phone, input.phone),
+        where: eq(users.phone, phone),
       });
 
       if (!user) {
