@@ -12,6 +12,7 @@ export default function MenuPage() {
     { groupId: groupId! },
     { enabled: !!groupId }
   );
+  const { data: calendar } = trpc.products.todayCalendar.useQuery();
 
   return (
     <div className="flex flex-col flex-1">
@@ -48,7 +49,7 @@ export default function MenuPage() {
         ) : (
           <div className="space-y-3">
             {products.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} salePct={calendar?.salePct ?? null} />
             ))}
           </div>
         )}

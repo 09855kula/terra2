@@ -17,7 +17,13 @@ export default function LoginPage() {
       setStep("otp");
       setError("");
     },
-    onError: (e) => setError(e.message),
+    onError: (e) => {
+      if (e.data?.code === "NOT_FOUND") {
+        setError("That number isn't in our system. Contact your rep to get set up.");
+      } else {
+        setError(e.message);
+      }
+    },
   });
 
   const verifyOtp = trpc.auth.verifyOtp.useMutation({
@@ -25,7 +31,7 @@ export default function LoginPage() {
     onError: (e) => setError(e.message),
   });
 
-  const handlePhone = (e: React.FormEvent) => {
+  const handlePhone = (e: { preventDefault(): void }) => {
     e.preventDefault();
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 10) {

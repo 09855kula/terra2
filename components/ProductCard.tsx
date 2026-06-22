@@ -14,7 +14,7 @@ type Product = {
   onSale: boolean;
 };
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, salePct }: { product: Product; salePct?: string | null }) {
   const { items, addItem, updateQty } = useCart();
   const cartItem = items.find((i) => i.productId === product.id);
   const qty = cartItem?.quantity ?? 0;
@@ -23,7 +23,8 @@ export function ProductCard({ product }: { product: Product }) {
   const priceCents = calcEffectivePrice(
     basePriceCents,
     product.discountPct,
-    product.tierDiscountPct
+    product.tierDiscountPct,
+    salePct ?? null
   );
   const isOutOfStock = product.stock <= qty;
 

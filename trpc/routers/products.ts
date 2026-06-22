@@ -1,12 +1,21 @@
 import { router, protectedProcedure } from "../init";
 import { db } from "@/db";
-import { products, productTiers, categoryGroups } from "@/db/schema";
+import { products, productTiers, categoryGroups, operatingCalendar } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 
 export const productsRouter = router({
   groups: protectedProcedure.query(async () => {
     return db.select().from(categoryGroups).orderBy(categoryGroups.sortOrder);
+  }),
+
+  todayCalendar: protectedProcedure.query(async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const [entry] = await db
+      .select()
+      .from(operatingCalendar)
+      .where(eq(operatingCalendar.calendarDate, today));
+    return entry ?? null;
   }),
 
   list: protectedProcedure
