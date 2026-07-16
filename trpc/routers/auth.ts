@@ -5,13 +5,20 @@ import { db } from "../../db";
 import { users } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import { SignJWT } from "jose";
+import twilio from "twilio";
+
+function normalizePhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  return `+${digits}`;
+}
 
 export const authRouter = router({
   requestOtp: publicProcedure
     .input(z.object({ phone: z.string() }))
     .mutation(async ({ input }) => {
+      const phone = normalizePhone(input.phone);
       const user = await db.query.users.findFirst({
-        where: eq(users.phone, input.phone),
+        where: eq(users.phone, phone),
       });
 
       if (!user) {
@@ -29,7 +36,20 @@ export const authRouter = router({
         .set({ otpCode: code, otpExpiresAt: expiry })
         .where(eq(users.id, user.id));
 
-      console.log(`OTP for ${input.phone}: ${code}`);
+      const sid = process.env.TWILIO_ACCOUNT_SID;
+      const token = process.env.TWILIO_AUTH_TOKEN;
+      const from = process.env.TWILIO_PHONE_NUMBER;
+
+      if (sid && token && from) {
+        const client = twilio(sid, token);
+        await client.messages.create({
+          body: `Your Terra code is: ${code}`,
+          from,
+          to: phone,
+        });
+      } else {
+        console.log(`OTP for ${phone}: ${code}`);
+      }
 
       return { success: true };
     }),
@@ -41,8 +61,9 @@ export const authRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
+      const phone = normalizePhone(input.phone);
       const user = await db.query.users.findFirst({
-        where: eq(users.phone, input.phone),
+        where: eq(users.phone, phone),
       });
 
       if (!user) {
@@ -63,6 +84,13 @@ export const authRouter = router({
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "Invalid OTP Code",
+        });
+      }
+
+      if (!user.profileConfirmed) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Your account is pending approval. Contact your rep to get set up.",
         });
       }
 

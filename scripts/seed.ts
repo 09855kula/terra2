@@ -465,23 +465,31 @@ async function main() {
     if ((await count(deliverySchedules)) === 0) {
       // dayOfWeek: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
       await db.insert(deliverySchedules).values([
-        // Travis (driver1): Downtown — Mon two windows, Wed & Fri single window
+        // Travis (driver1): Downtown — Mon/Wed/Fri two windows, Tue/Thu single window
         { driverId: driver1Id, districtId: dtId, dayOfWeek: 1, windowNumber: 1, windowStart: "10:00", windowEnd: "14:00", routeOrder: 1 },
         { driverId: driver1Id, districtId: dtId, dayOfWeek: 1, windowNumber: 2, windowStart: "14:00", windowEnd: "18:00", routeOrder: 2 },
+        { driverId: driver1Id, districtId: dtId, dayOfWeek: 2, windowNumber: 1, windowStart: "10:00", windowEnd: "18:00", routeOrder: 1 },
         { driverId: driver1Id, districtId: dtId, dayOfWeek: 3, windowNumber: 1, windowStart: "10:00", windowEnd: "18:00", routeOrder: 1 },
+        { driverId: driver1Id, districtId: dtId, dayOfWeek: 4, windowNumber: 1, windowStart: "10:00", windowEnd: "18:00", routeOrder: 1 },
         { driverId: driver1Id, districtId: dtId, dayOfWeek: 5, windowNumber: 1, windowStart: "10:00", windowEnd: "18:00", routeOrder: 1 },
-        // Travis (driver1): Midtown — Mon two windows, Wed & Fri single window
+        // Travis (driver1): Midtown — Mon/Wed/Fri two windows, Tue/Thu single window
         { driverId: driver1Id, districtId: mtId, dayOfWeek: 1, windowNumber: 1, windowStart: "10:00", windowEnd: "14:00", routeOrder: 3 },
         { driverId: driver1Id, districtId: mtId, dayOfWeek: 1, windowNumber: 2, windowStart: "14:00", windowEnd: "18:00", routeOrder: 4 },
+        { driverId: driver1Id, districtId: mtId, dayOfWeek: 2, windowNumber: 1, windowStart: "10:00", windowEnd: "18:00", routeOrder: 2 },
         { driverId: driver1Id, districtId: mtId, dayOfWeek: 3, windowNumber: 1, windowStart: "10:00", windowEnd: "18:00", routeOrder: 2 },
+        { driverId: driver1Id, districtId: mtId, dayOfWeek: 4, windowNumber: 1, windowStart: "10:00", windowEnd: "18:00", routeOrder: 2 },
         { driverId: driver1Id, districtId: mtId, dayOfWeek: 5, windowNumber: 1, windowStart: "10:00", windowEnd: "18:00", routeOrder: 2 },
-        // Mike (driver2): East Side — Mon, Wed, Fri
+        // Mike (driver2): East Side — Mon–Fri
         { driverId: driver2Id, districtId: esId, dayOfWeek: 1, windowNumber: 1, windowStart: "11:00", windowEnd: "17:00", routeOrder: 1 },
+        { driverId: driver2Id, districtId: esId, dayOfWeek: 2, windowNumber: 1, windowStart: "11:00", windowEnd: "17:00", routeOrder: 1 },
         { driverId: driver2Id, districtId: esId, dayOfWeek: 3, windowNumber: 1, windowStart: "11:00", windowEnd: "17:00", routeOrder: 1 },
+        { driverId: driver2Id, districtId: esId, dayOfWeek: 4, windowNumber: 1, windowStart: "11:00", windowEnd: "17:00", routeOrder: 1 },
         { driverId: driver2Id, districtId: esId, dayOfWeek: 5, windowNumber: 1, windowStart: "11:00", windowEnd: "17:00", routeOrder: 1 },
-        // Mike (driver2): West End — Mon, Wed, Fri
+        // Mike (driver2): West End — Mon–Fri
         { driverId: driver2Id, districtId: weId, dayOfWeek: 1, windowNumber: 1, windowStart: "12:00", windowEnd: "18:00", routeOrder: 2 },
+        { driverId: driver2Id, districtId: weId, dayOfWeek: 2, windowNumber: 1, windowStart: "12:00", windowEnd: "18:00", routeOrder: 2 },
         { driverId: driver2Id, districtId: weId, dayOfWeek: 3, windowNumber: 1, windowStart: "12:00", windowEnd: "18:00", routeOrder: 2 },
+        { driverId: driver2Id, districtId: weId, dayOfWeek: 4, windowNumber: 1, windowStart: "12:00", windowEnd: "18:00", routeOrder: 2 },
         { driverId: driver2Id, districtId: weId, dayOfWeek: 5, windowNumber: 1, windowStart: "12:00", windowEnd: "18:00", routeOrder: 2 },
       ]);
     }

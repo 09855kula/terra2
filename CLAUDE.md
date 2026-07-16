@@ -190,7 +190,14 @@ Tables:
 **Key decisions baked in:**
 
 - No separate `customers` table — merged into `users` with role flags
-- Discount logic: highest of product-level or tier-level wins; VIP is stackable — handled in app logic, not schema
+- Discount logic: highest of product-level or tier-level wins — handled in app logic, not schema
+- VIP is **NOT a price discount** — VIP customers earn extra points (multiplier TBD, ~1.5–2×). Points are the loyalty mechanism.
+- Points redemption: 20 points = 1 free item (legacy rule; exact UX TBD for M4)
+- Points earn cap per order: TBD (client to confirm)
+- Cutoff times are per delivery schedule (`windowStart`), not a global setting — configurable via M6 admin
+- Cancel: customers can cancel any `pending` order. Once status advances past pending, cancellation is blocked.
+- Profile confirmed (`users.profileConfirmed`): new referred customers start `false`; admin reviews and flips to `true`. Unconfirmed users are **fully blocked at login** — `verifyOtp` throws FORBIDDEN before issuing the JWT. Error message: "Your account is pending approval."
+- VIP multiplier: 1.5× points on earn (applied in `orders.create` when points earn logic is built in M4/M5)
 - `orders.districtId` and `orders.address` are snapshots (historical accuracy)
 - No job queue (BullMQ/Redis) — inline SMS/email is fine at ~70 orders/week
 

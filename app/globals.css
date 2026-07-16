@@ -5,6 +5,13 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Terra design tokens */
+  --color-terra-green: var(--terra-green);
+  --color-terra-muted: var(--terra-muted);
+  --color-terra-price: var(--terra-price);
+  --color-terra-bg: var(--terra-green-bg);
+  --shadow-card: var(--terra-card-shadow);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
@@ -49,6 +56,18 @@
 }
 
 :root {
+  /* Terra design tokens */
+  --terra-green: #37751A;
+  --terra-green-dark: #3B6B26;
+  --terra-green-mid: #6CAC4F;
+  --terra-green-light: #8DC573;
+  --terra-green-action: rgba(39, 122, 0, 0.65);
+  --terra-green-bg: #EFF8DD;
+  --terra-muted: #616A5C;
+  --terra-price: #4C922C;
+  --terra-card-shadow: 0 2px 4px rgba(73, 129, 47, 0.1);
+  --terra-border-light: rgba(217, 217, 217, 0.3);
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
