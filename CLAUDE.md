@@ -36,33 +36,58 @@ Private invite-only cannabis delivery web app. Rebuild of a legacy MongoDB/Teleg
 ## Project Structure
 
 ```
-app/                        # Next.js App Router pages & API routes
-  api/trpc/[trpc]/route.ts  # tRPC HTTP entry point
-  login/                    # Public login page (phone + OTP)
+app/
+  (customer)/                # Customer-facing route group
+    page.tsx                 # Menu / product browse
+    cart/                    # Cart page
+    checkout/                # 4-step checkout flow (address, window, change, confirm)
+    orders/                  # Order history + orders/[id] detail
+    profile/                 # Profile + saved addresses
+    layout.tsx
+  api/
+    trpc/[trpc]/route.ts     # tRPC HTTP entry point
+    users/route.ts           # Standalone POST user-creation route (NOT auth-gated — dev/test use only)
+    logout/route.ts
+  login/                     # Public login page (phone + OTP)
   layout.tsx
   page.tsx
 db/
-  index.ts                  # Drizzle instance (postgres.js driver)
-  schema.ts                 # All table definitions + enums
-drizzle/                    # Drizzle migration output (drizzle-kit)
+  index.ts                   # Drizzle instance (postgres.js driver)
+  schema.ts                  # All table definitions + enums
+drizzle/                     # Drizzle migration output (drizzle-kit)
 drizzle.config.ts
 trpc/
-  init.ts                   # initTRPC, createContext, exports router + publicProcedure
+  init.ts                    # initTRPC, createContext, exports router + publicProcedure + protectedProcedure
   routers/
-    _app.ts                 # Root router — merge all sub-routers here
-    auth.ts                 # requestOtp, verifyOtp
-    users.ts                # users.create (and future CRUD)
-middleware.ts               # Route protection — lives at project root
-old app/                    # Legacy reference only — DO NOT use for implementation
-  backend/                  # Old Django backend
-  frontend-menu-web-app/    # Old frontend
+    _app.ts                  # Root router — merges users, auth, products, orders
+    auth.ts                  # requestOtp, verifyOtp
+    users.ts                 # users.create, users.me, users.addAddress
+    products.ts               # products.list, products.groups, products.todayCalendar
+    orders.ts                 # orders.create, getActive, getHistory, byId, cancel, getDeliverySchedules
+scripts/
+  seed.ts                    # Seeds all 12 tables with realistic mock data — npm run seed
+lib/
+  store/cart.ts               # Client-side cart state
+  utils/discount.ts           # calcEffectivePrice (product/tier/sale-day discount) — VIP stacking is a TODO
+  utils/delivery.ts           # Delivery window calculation from deliverySchedules
+middleware.ts                # Route protection — lives at project root
+old_app/                     # Legacy reference only — DO NOT use for implementation
+  backend/                   # Old Django backend
+  frontend-menu-web-app/     # Old frontend
 public/
-compose.yml                 # Base Docker services (db, volumes, network)
-compose.dev.yml             # Dev overrides (app + pgadmin)
-compose.prod.yml            # Prod overrides
-Dockerfile                  # Multi-stage: deps -> builder -> runner
-env.example                 # All required env vars documented
+compose.yml                  # Base Docker services (db, volumes, network)
+compose.dev.yml              # Dev overrides (app + pgadmin)
+compose.prod.yml             # Prod overrides
+Dockerfile                   # Multi-stage: deps -> builder -> runner
+env.example                  # All required env vars documented
 ```
+
+**Not built yet — no router or app route exists for any of these:**
+
+- Admin (order management, product/inventory CRUD, category management, customer service tools, broadcast email)
+- Driver views (the `drivers` table exists but nothing reads/writes it besides seed data)
+- Points redemption (`orders.addGiftItem`, `isUsePoint` flow) — architecture resolved, not implemented
+- `operatingCalendar.pointsMultiplier` admin controls
 
 ---
 
@@ -216,12 +241,13 @@ Tables:
 
 ## Known Issues / Tech Debt
 
-- `db/index.ts` has a `console.log("DATABASE_URL: ...")` — remove before M2
-- `Dockerfile` runner stage copies Prisma artifacts that don't exist — fix when doing prod build work
+- `Dockerfile` runner stage copies Prisma artifacts that don't exist — Prisma has been fully dropped, fix when doing prod build work
 - `compose.dev.yml` references `NEXTAUTH_URL` and `NEXTAUTH_SECRET` — replace with `JWT_SECRET`
 - `env.example` says "Prisma connection string" — update the comment
-- OTP is 6 digits in current `auth.ts` code (`100000 + Math.random() * 900000`) — should be 4 digits to match original UX (`1000 + Math.random() * 9000`)
-- `verifyOtp` references undefined `secret` variable — broken, needs fix (see M1 tasks)
+- `app/api/users/route.ts` (standalone REST route for user creation) has no auth/admin gate — fine for local dev/testing, must not ship to prod unguarded on an invite-only app
+- VIP stackable discount is unimplemented — literal `// TODO` in `lib/utils/discount.ts`, needs the % confirmed by Travis
+- **Phone number country-code mismatch (login bug):** frontend (`app/login/page.tsx`) only requires 10+ digits before submitting; backend `normalizePhone` in `auth.ts` just prepends `+` to whatever digits it receives. Seeded/real phone numbers are stored with the country code (e.g. `+14165550003`, 11 digits). A user entering a 10-digit number (no leading `1`) passes frontend validation but gets normalized to the wrong number (`+4165550003`) and fails `NOT_FOUND` on `requestOtp`. Placeholder text implies a country code is needed but validation doesn't enforce it. Fix by either bumping frontend min-length to 11 and making the country code explicit in the input, or having `normalizePhone` try both the raw digits and a `1`-prefixed variant when looking up the user.
+- `orders.total` and `orders.totalAfterDiscount` always end up equal, since discount is applied client-side in `ProductCard.tsx` before the item ever reaches the cart/order. No raw pre-discount subtotal is preserved. Not a blocker for customer-facing flow, but will need fixing before building the admin order-detail view, which expects to show raw total, discount %, and grand total separately.
 
 ---
 
@@ -230,31 +256,14 @@ Tables:
 | # | Name | Status |
 |---|---|---|
 | M0 | Infrastructure (Docker, repo, env) | Complete |
-| M1 | Backend foundation (schema, tRPC, auth) | In progress |
-| M2 | Data migration (MongoDB -> Postgres) | In Progress |
-| M3 | UI rebuild (VPS provisioning at start) | Pending |
-| M4 | Cart & checkout | Pending |
-| M5 | Order management | Pending |
-| M6 | Admin tools | Pending |
-| M7 | Launch | Pending |
-| Post | Post-launch | Pending |
-
----
-
-## M1 Remaining Tasks (current branch: `feat/complete-m1-auth`)
-
-- [ ] `trpc/init.ts` — add `createContext` returning `{ resHeaders: new Headers() }`, wire into `initTRPC.context<Context>()`
-- [ ] `trpc/routers/auth.ts` — fix `verifyOtp`: define `secret`, add `ctx` to mutation signature, set httpOnly cookie via `ctx.resHeaders.set('Set-Cookie', ...)`
-- [ ] `trpc/routers/_app.ts` — add `authRouter` to root router
-- [ ] `app/api/trpc/[trpc]/route.ts` — import and pass `createContext` to `fetchRequestHandler`
-- [ ] `middleware.ts` — create at project root, protect all routes except public paths
-- [ ] `app/login/page.tsx` — stub login page (prevents middleware redirect loop)
-- [ ] `compose.dev.yml` — replace `NEXTAUTH_URL`/`NEXTAUTH_SECRET` with `JWT_SECRET`
-- [ ] `env.example` — fix "Prisma connection string" comment
-- [ ] `Dockerfile` — remove stale Prisma copy steps from runner stage
-- [ ] `db/index.ts` — remove `console.log` of DATABASE_URL
-- [ ] Fix OTP to 4 digits in `auth.ts`
-- [ ] `tsc --noEmit` passes clean
+| M1 | Backend foundation (schema, tRPC, auth) | Complete |
+| M2 | Seed data (all 12 tables) | Complete |
+| M3 | Customer UI (menu, cart, checkout, orders, profile) | Complete — merged to `main`, verified end-to-end (seed runs clean, `tsc --noEmit` passes, full browse-to-order flow works against real data) |
+| M4 | Cart & checkout — points redemption + admin points-multiplier controls | In progress — architecture resolved (gift item appends to existing order via `isUsePoint`, customer picks item, no auto-cheapest); not yet implemented |
+| M5 | Order management (admin dashboard, driver views, customer messaging) | Not started |
+| M6 | Admin tools (inventory, product/category mgmt, broadcast email, customer service tab) | Not started |
+| M7 | Launch (security hardening, staging sign-off, DNS swap, credential handoff) | Not started |
+| Post | Post-launch (invoicing/PnL stats) | Not started — scope TBD |
 
 ---
 
