@@ -5,9 +5,17 @@ import {
   orderItems,
   deliverySchedules,
   userAddresses,
+  users,
 } from "@/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { z } from "zod";
+
+const MAX_POINTS_PER_ORDER = 20;
+
+function calcPointsEarned(totalDollars: number, isVip: boolean): number {
+  const base = Math.min(Math.floor(totalDollars / 50), MAX_POINTS_PER_ORDER);
+  return isVip ? Math.floor(base * 1.5) : base;
+}
 
 export const ordersRouter = router({
   getDeliverySchedules: protectedProcedure.query(async () => {
@@ -69,6 +77,26 @@ export const ordersRouter = router({
         .where(eq(orderItems.orderId, order.id));
 
       return { ...order, items };
+    }),
+
+  cancel: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const [order] = await db
+        .select()
+        .from(orders)
+        .where(and(eq(orders.id, input.id), eq(orders.userId, ctx.user.id)));
+
+      if (!order) throw new Error("Order not found");
+      if (order.status !== "pending") throw new Error("Order can no longer be cancelled");
+
+      const [updated] = await db
+        .update(orders)
+        .set({ status: "cancelled" })
+        .where(eq(orders.id, input.id))
+        .returning();
+
+      return updated;
     }),
 
   create: protectedProcedure
@@ -136,6 +164,14 @@ export const ordersRouter = router({
           lineTotal: ((item.unitPriceCents * item.quantity) / 100).toFixed(2),
         }))
       );
+
+      const pointsEarned = calcPointsEarned(totalCents / 100, ctx.user.isVip);
+      if (pointsEarned > 0) {
+        await db
+          .update(users)
+          .set({ points: sql`${users.points} + ${pointsEarned}` })
+          .where(eq(users.id, ctx.user.id));
+      }
 
       return order;
     }),

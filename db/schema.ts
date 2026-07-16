@@ -17,6 +17,7 @@ export const orderStatusEnum = pgEnum("order_status", [
   "pending",
   "accepted",
   "complete",
+  "cancelled",
   "etf",
   "etf_complete",
   "iou",

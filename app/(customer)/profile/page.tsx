@@ -2,7 +2,11 @@
 import { trpc } from "@/lib/trpc/client";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/store/cart";
-import Link from "next/link";
+import { Card } from "@/components/ui/Card";
+import { PillButton } from "@/components/ui/PillButton";
+import { SectionLabel } from "@/components/ui/SectionLabel";
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
+import { PageWrapper } from "@/components/ui/PageWrapper";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -15,80 +19,70 @@ export default function ProfilePage() {
     router.push("/login");
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-zinc-500">
-        Loading…
-      </div>
-    );
-  }
+  if (isLoading) return <LoadingScreen />;
 
   return (
-    <div className="flex flex-1 flex-col max-w-2xl mx-auto w-full px-4 py-6 gap-6">
-      <div>
-        <h1 className="text-xl font-bold text-white">
+    <PageWrapper className="gap-5">
+      {/* Name + phone */}
+      <Card className="px-5 py-4">
+        <h1 className="text-[22px] font-bold text-[#37751A]">
           {me?.firstName ? `Hey, ${me.firstName}` : "Profile"}
         </h1>
-        <p className="text-zinc-400 text-sm mt-1">{me?.phone}</p>
-      </div>
+        <p className="text-[#616A5C] opacity-80 text-sm mt-1">{me?.phone}</p>
+      </Card>
 
-      <div className="space-y-3">
-        <h2 className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-          Delivery addresses
-        </h2>
+      {/* Points */}
+      {(me?.points ?? 0) > 0 && (
+        <Card className="px-5 py-4">
+          <SectionLabel>Points balance</SectionLabel>
+          <p className="text-[#4C922C] font-bold text-3xl mt-1">{me?.points}</p>
+          <p className="text-xs text-[#616A5C] opacity-60 mt-1">
+            Spend rate TBD — pending client confirmation
+          </p>
+        </Card>
+      )}
+
+      {/* Addresses */}
+      <div>
+        <div className="mb-2 px-1">
+          <SectionLabel>Delivery addresses</SectionLabel>
+        </div>
         {(me?.addresses ?? []).length === 0 ? (
-          <p className="text-zinc-500 text-sm">No addresses saved yet.</p>
+          <Card className="px-5 py-4">
+            <p className="text-[#616A5C] opacity-60 text-sm">No addresses saved yet.</p>
+          </Card>
         ) : (
           <div className="space-y-2">
-            {me?.addresses.map((addr, idx) => (
-              <div
-                key={addr.id}
-                className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-500 shrink-0">
-                    {idx + 1}.
-                  </span>
-                  <span className="text-white text-sm flex-1">{addr.address}</span>
-                  {addr.isPrimary && (
-                    <span className="text-[10px] text-green-400 border border-green-800 rounded px-1.5 py-0.5 shrink-0">
-                      Primary
+            {me?.addresses.map((addr) => (
+              <Card key={addr.id} className="px-5 py-3.5 flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#37751A] font-semibold text-[14px]">
+                      {addr.label ?? "Address"}
                     </span>
-                  )}
+                    {addr.isPrimary && (
+                      <span className="text-[10px] font-semibold text-[#6CAC4F] border border-[#6CAC4F] rounded px-1.5 py-0.5 shrink-0">
+                        Primary
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-[#616A5C] opacity-80 mt-0.5 truncate">{addr.address}</p>
                 </div>
-                {addr.label && (
-                  <p className="text-xs text-zinc-500 mt-1 ml-5">{addr.label}</p>
-                )}
-              </div>
+              </Card>
             ))}
           </div>
         )}
       </div>
 
-      {(me?.points ?? 0) > 0 && (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3">
-          <p className="text-sm text-zinc-400">Points balance</p>
-          <p className="text-2xl font-bold text-white mt-1">{me?.points}</p>
-          <p className="text-xs text-zinc-500 mt-1">
-            Discount value: TBD (pending client confirmation)
-          </p>
-        </div>
-      )}
-
-      <div className="space-y-2 mt-auto">
-        <Link
-          href="/orders"
-          className="block w-full rounded-xl border border-zinc-700 py-3 text-center text-zinc-300 hover:border-zinc-500 transition-colors"
-        >
+      {/* Actions */}
+      <div className="space-y-3 mt-auto pt-4">
+        <PillButton href="/orders" variant="outline" className="w-full">
           Order history
-        </Link>
-        <button
-          onClick={logout}
-          className="w-full rounded-xl border border-red-900 py-3 text-red-400 hover:border-red-700 transition-colors"
-        >
+        </PillButton>
+        <PillButton onClick={logout} variant="danger" className="w-full text-red-500">
           Log out
-        </button>
+        </PillButton>
       </div>
-    </div>
+    </PageWrapper>
   );
 }

@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Delete01Icon } from "@hugeicons/core-free-icons";
+import { Card } from "@/components/ui/Card";
+import { PillButton } from "@/components/ui/PillButton";
+import { PageWrapper } from "@/components/ui/PageWrapper";
 
 export default function CartPage() {
   const router = useRouter();
@@ -14,83 +17,80 @@ export default function CartPage() {
 
   if (count === 0) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
-        <p className="text-zinc-400">Your cart is empty</p>
-        <Link
-          href="/"
-          className="rounded-lg bg-green-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-green-500 transition-colors"
-        >
-          Browse menu
-        </Link>
+      <div className="flex flex-1 flex-col items-center justify-center gap-5 px-4 text-center">
+        <p className="text-[#616A5C] text-lg font-medium">Your cart is empty</p>
+        <PillButton href="/" className="px-8 h-12">Browse menu</PillButton>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-1 flex-col max-w-2xl mx-auto w-full px-4 py-6 gap-4">
-      <h1 className="text-xl font-bold text-white">Your cart</h1>
+    <PageWrapper className="pt-6 pb-32">
+      <h1 className="text-xl font-bold text-[#37751A]">Your cart</h1>
 
-      <div className="space-y-2">
-        {items.map((item) => (
+      <Card className="overflow-hidden">
+        {items.map((item, idx) => (
           <div
             key={item.productId}
-            className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 gap-3"
+            className={`flex items-center px-4 py-3.5 gap-3 ${
+              idx < items.length - 1 ? "border-b border-[#6CAC4F]/20" : ""
+            }`}
           >
             <div className="min-w-0 flex-1">
-              <p className="font-medium text-white truncate">{item.productName}</p>
-              <p className="text-sm text-green-400">{formatCents(item.unitPriceCents)}</p>
+              <p className="font-semibold text-[#37751A] text-[15px] truncate">{item.productName}</p>
+              <p className="text-[13px] text-[#616A5C] opacity-80 mt-0.5">
+                {formatCents(item.unitPriceCents)} each
+              </p>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2.5 shrink-0">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => updateQty(item.productId, item.quantity - 1)}
-                  className="rounded-lg border border-zinc-700 w-7 h-7 flex items-center justify-center text-zinc-300 hover:border-zinc-500 transition-colors"
+                  className="w-8 h-8 rounded-full border border-[#8DC573] flex items-center justify-center text-[#37751A] hover:bg-[#EFF8DD] transition-colors text-base leading-none"
                 >
                   −
                 </button>
-                <span className="w-5 text-center text-sm text-white">
+                <span className="w-5 text-center text-sm font-semibold text-[#37751A]">
                   {item.quantity}
                 </span>
                 <button
                   onClick={() => updateQty(item.productId, item.quantity + 1)}
                   disabled={item.quantity >= item.stock}
-                  className="rounded-lg border border-zinc-700 w-7 h-7 flex items-center justify-center text-zinc-300 hover:border-zinc-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-8 h-8 rounded-full border border-[#8DC573] flex items-center justify-center text-[#37751A] hover:bg-[#EFF8DD] transition-colors text-base leading-none disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   +
                 </button>
               </div>
-              <span className="text-sm font-medium text-white w-14 text-right">
+              <span className="text-sm font-bold text-[#37751A] w-14 text-right">
                 {formatCents(item.unitPriceCents * item.quantity)}
               </span>
               <button
                 onClick={() => removeItem(item.productId)}
-                className="text-zinc-500 hover:text-red-400 transition-colors p-1"
+                className="text-[#616A5C] opacity-50 hover:opacity-80 hover:text-red-500 transition-all p-1"
               >
                 <HugeiconsIcon icon={Delete01Icon} size={16} color="currentColor" />
               </button>
             </div>
           </div>
         ))}
-      </div>
+      </Card>
 
-      <div className="mt-auto border-t border-zinc-800 pt-4 space-y-3">
-        <div className="flex justify-between text-lg font-semibold text-white">
-          <span>Total</span>
-          <span>{formatCents(total)}</span>
-        </div>
-        <button
-          onClick={() => router.push("/checkout")}
-          className="w-full rounded-xl bg-green-600 py-3 font-semibold text-white hover:bg-green-500 transition-colors"
-        >
+      <Card className="px-5 py-4 flex justify-between items-center">
+        <span className="text-[#616A5C] font-medium">Total</span>
+        <span className="text-[#4C922C] font-bold text-2xl">{formatCents(total)}</span>
+      </Card>
+
+      <div className="space-y-3 mt-2">
+        <PillButton onClick={() => router.push("/checkout")} className="w-full text-[18px]">
           Checkout
-        </button>
+        </PillButton>
         <Link
           href="/"
-          className="block text-center text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
+          className="block text-center text-sm text-[#616A5C] opacity-70 hover:opacity-100 transition-opacity py-2"
         >
-          Continue shopping
+          ← Continue shopping
         </Link>
       </div>
-    </div>
+    </PageWrapper>
   );
 }

@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
-import { Figtree } from "next/font/google";
+import { Red_Hat_Display } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
 import { Providers } from "./providers";
 
-const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
+const redHatDisplay = Red_Hat_Display({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  weight: ["400", "500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   title: "Terra",
@@ -17,11 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={cn("h-full antialiased", figtree.variable, "font-sans")}
-    >
-      <body className="min-h-full flex flex-col">
+    <html lang="en" className={`${redHatDisplay.variable} font-sans h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-[#f3f3f3]">
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -5,6 +5,10 @@ import { trpc } from "@/lib/trpc/client";
 import { useCart } from "@/lib/store/cart";
 import { formatCents } from "@/lib/utils/discount";
 import { getAvailableWindows, type DeliveryWindow } from "@/lib/utils/delivery";
+import { SectionCard } from "@/components/ui/Card";
+import { PillButton } from "@/components/ui/PillButton";
+import { SectionLabel } from "@/components/ui/SectionLabel";
+import { PageWrapper } from "@/components/ui/PageWrapper";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -66,69 +70,63 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col max-w-2xl mx-auto w-full px-4 py-6 gap-6">
+    <PageWrapper className="gap-6">
+      {/* Step progress */}
       <div className="flex items-center gap-2">
         {([1, 2, 3, 4] as Step[]).map((s) => (
           <div
             key={s}
             className={`h-1.5 flex-1 rounded-full transition-colors ${
-              s <= step ? "bg-green-500" : "bg-zinc-800"
+              s <= step ? "bg-[#6CAC4F]" : "bg-[#e0e8dc]"
             }`}
           />
         ))}
       </div>
 
       {step === 1 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-white">Delivery address</h2>
-          {addresses.length === 0 ? (
-            <p className="text-zinc-400 text-sm">
-              No addresses saved. Add one in your{" "}
-              <a href="/profile" className="text-green-400 underline">
-                profile
-              </a>
-              .
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {addresses.map((addr) => (
+        <SectionCard label="Delivery address">
+          <div className="p-4 space-y-3">
+            {addresses.length === 0 ? (
+              <p className="text-[#616A5C] text-sm text-center py-4">
+                No addresses saved. Add one in your{" "}
+                <a href="/profile" className="text-[#37751A] underline">profile</a>.
+              </p>
+            ) : (
+              addresses.map((addr) => (
                 <button
                   key={addr.id}
                   onClick={() => setSelectedAddressId(addr.id)}
-                  className={`w-full text-left rounded-xl border px-4 py-3 transition-colors ${
+                  className={`w-full text-left rounded-xl border-[2px] px-4 py-3 transition-colors ${
                     selectedAddressId === addr.id
-                      ? "border-green-500 bg-green-950 text-white"
-                      : "border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-zinc-600"
+                      ? "border-[#6CAC4F] bg-[#EFF8DD]"
+                      : "border-[rgba(217,217,217,0.5)] bg-[#F7F7F7] hover:border-[#8DC573]"
                   }`}
                 >
-                  <p className="font-medium">{addr.label ?? "Address"}</p>
-                  <p className="text-sm text-zinc-400">{addr.address}</p>
+                  <p className="font-semibold text-[#37751A] text-[14px]">{addr.label ?? "Address"}</p>
+                  <p className="text-sm text-[#616A5C] opacity-80 mt-0.5">{addr.address}</p>
                 </button>
-              ))}
-            </div>
-          )}
-          <button
-            onClick={() => {
-              if (selectedAddressId) setStep(2);
-            }}
-            disabled={!selectedAddressId}
-            className="w-full rounded-xl bg-green-600 py-3 font-semibold text-white hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            Next
-          </button>
-        </div>
+              ))
+            )}
+            <PillButton
+              onClick={() => { if (selectedAddressId) setStep(2); }}
+              disabled={!selectedAddressId}
+              className="w-full mt-2"
+            >
+              Next →
+            </PillButton>
+          </div>
+        </SectionCard>
       )}
 
       {step === 2 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-white">Delivery window</h2>
-          {windows.length === 0 ? (
-            <p className="text-zinc-400 text-sm">
-              No delivery windows available today or tomorrow.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {windows.map((w) => {
+        <SectionCard label="Delivery window">
+          <div className="p-4 space-y-3">
+            {windows.length === 0 ? (
+              <p className="text-[#616A5C] text-sm text-center py-4">
+                No delivery windows available today or tomorrow.
+              </p>
+            ) : (
+              windows.map((w) => {
                 const key = `${w.scheduleId}-${w.dateLabel}`;
                 const isSelected =
                   selectedWindow?.scheduleId === w.scheduleId &&
@@ -138,155 +136,133 @@ export default function CheckoutPage() {
                     key={key}
                     onClick={() => !w.isPast && setSelectedWindow(w)}
                     disabled={w.isPast}
-                    className={`w-full text-left rounded-xl border px-4 py-3 transition-colors ${
+                    className={`w-full text-left rounded-xl border-[2px] px-4 py-3 transition-colors ${
                       isSelected
-                        ? "border-green-500 bg-green-950 text-white"
+                        ? "border-[#6CAC4F] bg-[#EFF8DD]"
                         : w.isPast
-                        ? "border-zinc-800 bg-zinc-900 text-zinc-600 cursor-not-allowed"
-                        : "border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-zinc-600"
+                        ? "border-[rgba(217,217,217,0.3)] bg-[#F7F7F7] opacity-40 cursor-not-allowed"
+                        : "border-[rgba(217,217,217,0.5)] bg-[#F7F7F7] hover:border-[#8DC573]"
                     }`}
                   >
-                    <p className="font-medium">{w.dateLabel}</p>
-                    <p className="text-sm">
+                    <p className="font-semibold text-[#37751A] text-[14px]">{w.dateLabel}</p>
+                    <p className="text-sm text-[#616A5C] opacity-80 mt-0.5">
                       {w.label}
-                      {w.isPast && (
-                        <span className="text-zinc-500"> · Cutoff passed</span>
-                      )}
+                      {w.isPast && <span> · Cutoff passed</span>}
                     </p>
                   </button>
                 );
-              })}
+              })
+            )}
+            <div className="flex gap-3 mt-2">
+              <PillButton onClick={() => setStep(1)} variant="outline" className="flex-1">
+                ← Back
+              </PillButton>
+              <PillButton
+                onClick={() => { if (selectedWindow) setStep(3); }}
+                disabled={!selectedWindow}
+                className="flex-1"
+              >
+                Next →
+              </PillButton>
             </div>
-          )}
-          <div className="flex gap-3">
-            <button
-              onClick={() => setStep(1)}
-              className="flex-1 rounded-xl border border-zinc-700 py-3 text-zinc-300 hover:border-zinc-500 transition-colors"
-            >
-              Back
-            </button>
-            <button
-              onClick={() => {
-                if (selectedWindow) setStep(3);
-              }}
-              disabled={!selectedWindow}
-              className="flex-1 rounded-xl bg-green-600 py-3 font-semibold text-white hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              Next
-            </button>
           </div>
-        </div>
+        </SectionCard>
       )}
 
       {step === 3 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-white">Change needed?</h2>
-          <div className="grid grid-cols-3 gap-2">
-            {CHANGE_OPTIONS.map((opt) => (
-              <button
-                key={opt}
-                onClick={() => setChange(opt)}
-                className={`rounded-xl border py-3 text-sm font-medium transition-colors ${
-                  change === opt
-                    ? "border-green-500 bg-green-950 text-green-300"
-                    : "border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-zinc-600"
-                }`}
-              >
-                {opt}
-              </button>
-            ))}
+        <SectionCard label="Change needed?">
+          <div className="p-4 space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              {CHANGE_OPTIONS.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => setChange(opt)}
+                  className={`rounded-xl py-3 text-[13px] font-semibold transition-colors ${
+                    change === opt
+                      ? "bg-[rgba(81,170,39,0.5)] text-[#2F521F]"
+                      : "bg-[rgba(81,170,39,0.12)] text-[#4B8331] hover:bg-[rgba(81,170,39,0.25)]"
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+            {change === "Other" && (
+              <input
+                type="text"
+                placeholder="Enter amount (e.g. $35)"
+                value={customChange}
+                onChange={(e) => setCustomChange(e.target.value)}
+                className="w-full bg-[#F7F7F7] border-[2px] border-[rgba(217,217,217,0.3)] rounded-xl px-4 py-3 text-[15px] text-[#616A5C] focus:outline-none focus:border-[#8DC573] transition-colors"
+              />
+            )}
+            <div className="flex gap-3 mt-2">
+              <PillButton onClick={() => setStep(2)} variant="outline" className="flex-1">
+                ← Back
+              </PillButton>
+              <PillButton onClick={() => setStep(4)} className="flex-1">
+                Next →
+              </PillButton>
+            </div>
           </div>
-          {change === "Other" && (
-            <input
-              type="text"
-              placeholder="Enter amount (e.g. $35)"
-              value={customChange}
-              onChange={(e) => setCustomChange(e.target.value)}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-          )}
-          <div className="flex gap-3">
-            <button
-              onClick={() => setStep(2)}
-              className="flex-1 rounded-xl border border-zinc-700 py-3 text-zinc-300 hover:border-zinc-500 transition-colors"
-            >
-              Back
-            </button>
-            <button
-              onClick={() => setStep(4)}
-              className="flex-1 rounded-xl bg-green-600 py-3 font-semibold text-white hover:bg-green-500 transition-colors"
-            >
-              Next
-            </button>
-          </div>
-        </div>
+        </SectionCard>
       )}
 
       {step === 4 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-white">Confirm order</h2>
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900 divide-y divide-zinc-800">
-            <div className="px-4 py-3 space-y-1">
-              <p className="text-xs text-zinc-500 uppercase tracking-wide">
-                Delivery
-              </p>
-              <p className="text-white">
+        <SectionCard label="Confirm order">
+          <div className="p-4 space-y-4">
+            <div className="space-y-1.5">
+              <SectionLabel>Delivery</SectionLabel>
+              <p className="text-[#37751A] font-semibold text-[15px]">
                 {selectedWindow?.dateLabel} · {selectedWindow?.label}
               </p>
             </div>
-            <div className="px-4 py-3 space-y-2">
-              <p className="text-xs text-zinc-500 uppercase tracking-wide">
-                Items
-              </p>
+
+            <div className="border-t border-[#6CAC4F]/20 pt-3 space-y-2">
+              <SectionLabel>Items</SectionLabel>
               {items.map((i) => (
                 <div key={i.productId} className="flex justify-between text-sm">
-                  <span className="text-zinc-300">
-                    {i.productName} × {i.quantity}
-                  </span>
-                  <span className="text-white">
-                    {formatCents(i.unitPriceCents * i.quantity)}
-                  </span>
+                  <span className="text-[#616A5C]">{i.productName} × {i.quantity}</span>
+                  <span className="text-[#37751A] font-semibold">{formatCents(i.unitPriceCents * i.quantity)}</span>
                 </div>
               ))}
             </div>
-            <div className="px-4 py-3 flex justify-between font-semibold text-white">
-              <span>Total</span>
-              <span>{formatCents(total)}</span>
+
+            <div className="border-t border-[#6CAC4F]/20 pt-3 flex justify-between items-center">
+              <span className="text-[#616A5C] font-medium">Total</span>
+              <span className="text-[#4C922C] font-bold text-xl">{formatCents(total)}</span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm text-[#616A5C] opacity-80">
+                Special instructions (optional)
+              </label>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Gate code, buzzer, leave at door…"
+                rows={3}
+                className="w-full bg-[#F7F7F7] border-[2px] border-[rgba(217,217,217,0.3)] rounded-xl px-4 py-3 text-[15px] text-[#616A5C] focus:outline-none focus:border-[#8DC573] transition-colors resize-none placeholder:opacity-50"
+              />
+            </div>
+
+            {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+
+            <div className="flex gap-3">
+              <PillButton onClick={() => setStep(3)} variant="outline" className="flex-1">
+                ← Back
+              </PillButton>
+              <PillButton
+                onClick={handlePlaceOrder}
+                disabled={createOrder.isPending}
+                className="flex-1"
+              >
+                {createOrder.isPending ? "Placing…" : "Place order"}
+              </PillButton>
             </div>
           </div>
-
-          <div className="space-y-2">
-            <label className="text-sm text-zinc-400">
-              Special instructions (optional)
-            </label>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Gate code, buzzer, leave at door…"
-              rows={3}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
-            />
-          </div>
-
-          {error && <p className="text-sm text-red-400">{error}</p>}
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => setStep(3)}
-              className="flex-1 rounded-xl border border-zinc-700 py-3 text-zinc-300 hover:border-zinc-500 transition-colors"
-            >
-              Back
-            </button>
-            <button
-              onClick={handlePlaceOrder}
-              disabled={createOrder.isPending}
-              className="flex-1 rounded-xl bg-green-600 py-3 font-semibold text-white hover:bg-green-500 disabled:opacity-50 transition-colors"
-            >
-              {createOrder.isPending ? "Placing…" : "Place order"}
-            </button>
-          </div>
-        </div>
+        </SectionCard>
       )}
-    </div>
+    </PageWrapper>
   );
 }
