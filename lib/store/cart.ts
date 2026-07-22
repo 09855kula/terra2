@@ -80,8 +80,9 @@ export const useCart = create<CartStore>()(
       totalCents: () =>
         get().items.reduce((sum, i) => sum + i.unitPriceCents * i.quantity, 0),
 
-      itemCount: () =>
-        get().items.reduce((sum, i) => sum + i.quantity, 0),
+      // Count of distinct products in the cart, not summed quantities — a
+      // single 1oz (multiplier 8) line item counts as 1, same as a 3.5g one.
+      itemCount: () => get().items.length,
     }),
     { name: "terra-cart", skipHydration: true }
   )

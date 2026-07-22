@@ -80,11 +80,6 @@ export function ProductCard({ product, salePct }: { product: Product; salePct?: 
             Sale
           </span>
         )}
-        {cartQuantity !== null && cartQuantity > 0 && (
-          <span className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-[#37751A] text-white text-[13px] font-bold flex items-center justify-center shadow">
-            {cartQuantity}
-          </span>
-        )}
         {product.stock === 0 && (
           <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
             <span className="text-xs font-semibold text-[#616A5C]">Out of stock</span>
