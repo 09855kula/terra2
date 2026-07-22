@@ -8,7 +8,7 @@ import {
   pointTransactions,
   orderStatusEnum,
 } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, gte, lte } from "drizzle-orm";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
@@ -42,23 +42,44 @@ export const adminRouter = router({
 
   orders: router({
     // Newest-first only — no ETA-based reordering here, that's a separate
-    // list-view concern.
-    list: adminProcedure.query(async () => {
-      return db
-        .select({
-          id: orders.id,
-          orderNumber: orders.orderNumber,
-          status: orders.status,
-          totalAfterDiscount: orders.totalAfterDiscount,
-          createdAt: orders.createdAt,
-          customerFirstName: users.firstName,
-          customerLastName: users.lastName,
-        })
-        .from(orders)
-        .innerJoin(users, eq(orders.userId, users.id))
-        .orderBy(desc(orders.createdAt))
-        .limit(50);
-    }),
+    // list-view concern. Optional from/to (YYYY-MM-DD) filters on deliveryDate,
+    // inclusive, for the Today/Tomorrow/All/custom-range filters in the UI.
+    list: adminProcedure
+      .input(
+        z
+          .object({
+            from: z.string().optional(),
+            to: z.string().optional(),
+          })
+          .optional(),
+      )
+      .query(async ({ input }) => {
+        const conditions = [];
+        if (input?.from) {
+          conditions.push(gte(orders.deliveryDate, new Date(`${input.from}T00:00:00.000Z`)));
+        }
+        if (input?.to) {
+          conditions.push(lte(orders.deliveryDate, new Date(`${input.to}T23:59:59.999Z`)));
+        }
+        const isFiltered = conditions.length > 0;
+
+        return db
+          .select({
+            id: orders.id,
+            orderNumber: orders.orderNumber,
+            status: orders.status,
+            totalAfterDiscount: orders.totalAfterDiscount,
+            deliveryDate: orders.deliveryDate,
+            createdAt: orders.createdAt,
+            customerFirstName: users.firstName,
+            customerLastName: users.lastName,
+          })
+          .from(orders)
+          .innerJoin(users, eq(orders.userId, users.id))
+          .where(isFiltered ? and(...conditions) : undefined)
+          .orderBy(desc(orders.createdAt))
+          .limit(isFiltered ? 200 : 50);
+      }),
 
     byId: adminProcedure
       .input(z.object({ id: z.number() }))
