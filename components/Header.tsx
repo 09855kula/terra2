@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useCart } from "@/lib/store/cart";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ShoppingBag01Icon, User02Icon } from "@hugeicons/core-free-icons";
+import { ShoppingBag01Icon, User02Icon, PackageDelivered01Icon } from "@hugeicons/core-free-icons";
 
 export function Header() {
   const itemCount = useCart((s) => s.itemCount());
@@ -24,6 +24,9 @@ export function Header() {
                 {itemCount > 9 ? "9+" : itemCount}
               </span>
             )}
+          </Link>
+          <Link href="/orders" className="p-2 text-white/90 hover:text-white transition-colors">
+            <HugeiconsIcon icon={PackageDelivered01Icon} size={24} color="currentColor" />
           </Link>
           <Link href="/profile" className="p-2 text-white/90 hover:text-white transition-colors">
             <HugeiconsIcon icon={User02Icon} size={24} color="currentColor" />
