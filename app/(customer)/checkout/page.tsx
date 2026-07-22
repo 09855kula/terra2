@@ -36,6 +36,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState("");
 
   const { data: me } = trpc.users.me.useQuery();
+  const utils = trpc.useUtils();
 
   const [orderPlaced, setOrderPlaced] = useState(false);
 
@@ -43,6 +44,10 @@ export default function CheckoutPage() {
     onSuccess: (order) => {
       setOrderPlaced(true);
       clear();
+      // Order creation changes points (earned, and spent if a gift item was
+      // redeemed) — without this, users.me would keep serving its cached
+      // pre-order balance for up to the default staleTime.
+      utils.users.me.invalidate();
       router.push(`/orders/${order.id}`);
     },
     onError: (e) => setError(e.message),

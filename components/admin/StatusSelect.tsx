@@ -3,10 +3,18 @@ import { trpc } from "@/lib/trpc/client";
 
 export function StatusSelect({ orderId, status }: { orderId: number; status: string }) {
   const utils = trpc.useUtils();
-  const { data: statuses } = trpc.admin.orderStatuses.useQuery();
+  // Enum values, fixed at build time — never changes at runtime.
+  const { data: statuses } = trpc.admin.orderStatuses.useQuery(undefined, { staleTime: Infinity });
 
   const updateStatus = trpc.admin.orders.updateStatus.useMutation({
-    onSuccess: () => utils.admin.orders.byId.invalidate({ id: orderId }),
+    onSuccess: () => {
+      // Status affects the order-detail view, the orders list (status/date
+      // filters), and the "new" (pending) nav badge count — all three need
+      // to reflect the change, not just the page we're currently on.
+      utils.admin.orders.byId.invalidate({ id: orderId });
+      utils.admin.orders.list.invalidate();
+      utils.admin.navCounts.invalidate();
+    },
   });
 
   return (
