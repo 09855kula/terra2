@@ -7,13 +7,18 @@ export interface CartItem {
   unitPriceCents: number;
   quantity: number;
   stock: number;
+  tierUnitOfMeasure: string | null;
+  tierShownAs: string | null;
+  imageUrl: string;
+  productType: "sativa" | "indica" | "hybrid" | null;
+  categoryName: string | null;
 }
 
 interface CartStore {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, "quantity">) => void;
   removeItem: (productId: number) => void;
   updateQty: (productId: number, quantity: number) => void;
+  setQty: (item: Omit<CartItem, "quantity">, quantity: number) => void;
   clear: () => void;
   totalCents: () => number;
   itemCount: () => number;
@@ -23,20 +28,6 @@ export const useCart = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
-
-      addItem: (item) =>
-        set((state) => {
-          const existing = state.items.find((i) => i.productId === item.productId);
-          if (existing) {
-            const newQty = Math.min(existing.quantity + 1, existing.stock);
-            return {
-              items: state.items.map((i) =>
-                i.productId === item.productId ? { ...i, quantity: newQty } : i
-              ),
-            };
-          }
-          return { items: [...state.items, { ...item, quantity: 1 }] };
-        }),
 
       removeItem: (productId) =>
         set((state) => ({
@@ -55,6 +46,23 @@ export const useCart = create<CartStore>()(
                 : i
             ),
           };
+        }),
+
+      setQty: (item, quantity) =>
+        set((state) => {
+          const clamped = Math.min(quantity, item.stock);
+          if (clamped <= 0) {
+            return { items: state.items.filter((i) => i.productId !== item.productId) };
+          }
+          const existing = state.items.find((i) => i.productId === item.productId);
+          if (existing) {
+            return {
+              items: state.items.map((i) =>
+                i.productId === item.productId ? { ...i, quantity: clamped } : i
+              ),
+            };
+          }
+          return { items: [...state.items, { ...item, quantity: clamped }] };
         }),
 
       clear: () => set({ items: [] }),

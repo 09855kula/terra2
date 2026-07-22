@@ -136,6 +136,14 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@keyframes confirm-flash {
+  0% { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+.confirm-flash {
+  animation: confirm-flash 500ms ease-out forwards;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
