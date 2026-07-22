@@ -54,8 +54,30 @@ export default function LoginPage() {
     requestOtp.mutate({ phone: digits });
   };
 
+  const submitOtp = (code: string) => {
+    if (code.length === 4 && !verifyOtp.isPending) {
+      verifyOtp.mutate({ phone: phone.replace(/\D/g, ""), code });
+    }
+  };
+
   const handleOtpKey = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, "").slice(-1);
+    const digits = value.replace(/\D/g, "");
+
+    if (digits.length > 1) {
+      // Pasted a full code — distribute across boxes
+      const next = [...otp];
+      for (let i = 0; i < 4 - index && i < digits.length; i++) {
+        next[index + i] = digits[i];
+      }
+      setOtp(next);
+      setError("");
+      const lastFilled = Math.min(index + digits.length, 3);
+      inputRefs[lastFilled].current?.focus();
+      if (next.every((d) => d !== "")) submitOtp(next.join(""));
+      return;
+    }
+
+    const digit = digits.slice(-1);
     const next = [...otp];
     next[index] = digit;
     setOtp(next);
@@ -66,14 +88,16 @@ export default function LoginPage() {
     }
 
     if (next.every((d) => d !== "")) {
-      const code = next.join("");
-      verifyOtp.mutate({ phone: phone.replace(/\D/g, ""), code });
+      submitOtp(next.join(""));
     }
   };
 
   const handleOtpBackspace = (index: number, e: React.KeyboardEvent) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs[index - 1].current?.focus();
+    }
+    if (e.key === "Enter") {
+      submitOtp(otp.join(""));
     }
   };
 
