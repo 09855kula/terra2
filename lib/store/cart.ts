@@ -16,9 +16,11 @@ export interface CartItem {
 
 interface CartStore {
   items: CartItem[];
+  selectedGiftIds: number[];
   removeItem: (productId: number) => void;
   updateQty: (productId: number, quantity: number) => void;
   setQty: (item: Omit<CartItem, "quantity">, quantity: number) => void;
+  toggleGiftId: (productId: number) => void;
   clear: () => void;
   totalCents: () => number;
   itemCount: () => number;
@@ -28,6 +30,7 @@ export const useCart = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      selectedGiftIds: [],
 
       removeItem: (productId) =>
         set((state) => ({
@@ -65,7 +68,14 @@ export const useCart = create<CartStore>()(
           return { items: [...state.items, { ...item, quantity: clamped }] };
         }),
 
-      clear: () => set({ items: [] }),
+      toggleGiftId: (productId) =>
+        set((state) => ({
+          selectedGiftIds: state.selectedGiftIds.includes(productId)
+            ? state.selectedGiftIds.filter((id) => id !== productId)
+            : [...state.selectedGiftIds, productId],
+        })),
+
+      clear: () => set({ items: [], selectedGiftIds: [] }),
 
       totalCents: () =>
         get().items.reduce((sum, i) => sum + i.unitPriceCents * i.quantity, 0),

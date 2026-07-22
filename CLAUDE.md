@@ -124,6 +124,16 @@ docker compose -f compose.yml -f compose.prod.yml up -d
 - **From host (CLI tools like drizzle-kit):** `postgresql://terra:changeme@localhost:5433/terra_db`
 - `DATABASE_URL` in `.env` should use `@db` (the Docker service name) for container use
 
+### Migrations
+
+Schema changes go through tracked Drizzle migrations — **not** `drizzle-kit push`, and **not** hand-written `ALTER TABLE` against the running container:
+
+1. Edit `db/schema.ts`
+2. `npm run db:generate` — diffs against `drizzle/meta` and writes a new file to `drizzle/` (safe to run from the host; needs no DB connection)
+3. `npm run db:migrate` — applies pending migrations, tracked in a `drizzle.__drizzle_migrations` table. `.env`'s `DATABASE_URL` uses `@db` (Docker-internal), so run this **inside the app container** — `docker exec terra2-app-1 npm run db:migrate` — not from the host, unless you override `DATABASE_URL` to the `localhost:5433` form first.
+
+`drizzle/0000_add_order_items_unit_snapshot.sql` is the project's baseline migration. The dev DB predates tracked migrations (it was built via `drizzle-kit push`, then two rounds of hand-applied `ALTER TABLE` — the `products.giftablePoints` backfill and the `orderItems.unitOfMeasure`/`shownAs` snapshot columns), so 0000 is a full 12-table snapshot that was never actually run against it. The dev DB's `drizzle.__drizzle_migrations` table has been seeded with a row matching 0000's hash/timestamp so `drizzle-kit migrate` treats it as already applied — it will **not** attempt to re-run 0000, only migrations generated after this point.
+
 ---
 
 ## Environment Variables

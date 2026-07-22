@@ -6,8 +6,12 @@ import {
   deliverySchedules,
   userAddresses,
   users,
+  products,
+  productTiers,
+  pointTransactions,
+  unitOfMeasureEnum,
 } from "@/db/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, gt, lte, gte, inArray } from "drizzle-orm";
 import { z } from "zod";
 
 const MAX_POINTS_PER_ORDER = 20;
@@ -107,72 +111,165 @@ export const ordersRouter = router({
         timeslot: z.string(),
         change: z.string().optional(),
         comment: z.string().optional(),
-        isUsePoint: z.boolean().default(false),
+        giftProductIds: z.array(z.number()).default([]),
         items: z.array(
           z.object({
             productId: z.number(),
             productName: z.string(),
             quantity: z.number().min(1),
             unitPriceCents: z.number().min(0),
+            unitOfMeasure: z.string().nullable().optional(),
+            shownAs: z.string().nullable().optional(),
           })
         ),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const [addr] = await db
-        .select()
-        .from(userAddresses)
-        .where(
-          and(
-            eq(userAddresses.id, input.addressId),
-            eq(userAddresses.userId, ctx.user.id)
-          )
+      return db.transaction(async (tx) => {
+        const [addr] = await tx
+          .select()
+          .from(userAddresses)
+          .where(
+            and(
+              eq(userAddresses.id, input.addressId),
+              eq(userAddresses.userId, ctx.user.id)
+            )
+          );
+
+        if (!addr) throw new Error("Address not found");
+
+        const totalCents = input.items.reduce(
+          (s, i) => s + i.unitPriceCents * i.quantity,
+          0
         );
 
-      if (!addr) throw new Error("Address not found");
+        // Gift items picked via points redemption on the cart page — validated
+        // and inserted as part of the same order, not a separate append-after step.
+        const giftIds = [...new Set(input.giftProductIds)];
+        let giftProducts: {
+          id: number;
+          name: string;
+          giftablePoints: number;
+          unitOfMeasure: (typeof unitOfMeasureEnum.enumValues)[number] | null;
+          shownAs: string | null;
+        }[] = [];
+        let totalGiftCost = 0;
 
-      const totalCents = input.items.reduce(
-        (s, i) => s + i.unitPriceCents * i.quantity,
-        0
-      );
+        if (giftIds.length > 0) {
+          // Joined to productTiers so the gift line item snapshots real unit
+          // data too, same as a paid item — not just the bare products row.
+          giftProducts = await tx
+            .select({
+              id: products.id,
+              name: products.name,
+              giftablePoints: products.giftablePoints,
+              unitOfMeasure: productTiers.unitOfMeasure,
+              shownAs: productTiers.shownAs,
+            })
+            .from(products)
+            .innerJoin(productTiers, eq(products.tierId, productTiers.id))
+            .where(and(inArray(products.id, giftIds), eq(products.active, true)));
 
-      const [order] = await db
-        .insert(orders)
-        .values({
-          userId: ctx.user.id,
-          districtId: addr.districtId ?? undefined,
-          address: addr.address,
-          deliveryDate: new Date(input.deliveryDate),
-          timeslot: input.timeslot,
-          total: (totalCents / 100).toFixed(2),
-          totalAfterDiscount: (totalCents / 100).toFixed(2),
-          change: input.change,
-          comment: input.comment,
-          isUsePoint: input.isUsePoint,
-          isWeb: true,
-          status: "pending",
-        })
-        .returning();
+          if (giftProducts.length !== giftIds.length) {
+            throw new Error("One or more gift items are no longer available");
+          }
+          if (giftProducts.some((p) => p.giftablePoints <= 0)) {
+            throw new Error("One or more products are not giftable");
+          }
 
-      await db.insert(orderItems).values(
-        input.items.map((item) => ({
-          orderId: order.id,
-          productId: item.productId,
-          productName: item.productName,
-          quantity: item.quantity,
-          unitPrice: (item.unitPriceCents / 100).toFixed(2),
-          lineTotal: ((item.unitPriceCents * item.quantity) / 100).toFixed(2),
-        }))
-      );
+          totalGiftCost = giftProducts.reduce((sum, p) => sum + p.giftablePoints, 0);
+          if (totalGiftCost > ctx.user.points) {
+            throw new Error("Not enough points for the selected gift items");
+          }
+        }
 
-      const pointsEarned = calcPointsEarned(totalCents / 100, ctx.user.isVip);
-      if (pointsEarned > 0) {
-        await db
-          .update(users)
-          .set({ points: sql`${users.points} + ${pointsEarned}` })
-          .where(eq(users.id, ctx.user.id));
-      }
+        const [order] = await tx
+          .insert(orders)
+          .values({
+            userId: ctx.user.id,
+            districtId: addr.districtId ?? undefined,
+            address: addr.address,
+            deliveryDate: new Date(input.deliveryDate),
+            timeslot: input.timeslot,
+            total: (totalCents / 100).toFixed(2),
+            totalAfterDiscount: (totalCents / 100).toFixed(2),
+            change: input.change,
+            comment: input.comment,
+            isUsePoint: giftProducts.length > 0,
+            isWeb: true,
+            status: "pending",
+          })
+          .returning();
 
-      return order;
+        await tx.insert(orderItems).values(
+          input.items.map((item) => ({
+            orderId: order.id,
+            productId: item.productId,
+            productName: item.productName,
+            quantity: item.quantity,
+            unitOfMeasure:
+              (item.unitOfMeasure as (typeof unitOfMeasureEnum.enumValues)[number] | null) ?? null,
+            shownAs: item.shownAs ?? null,
+            unitPrice: (item.unitPriceCents / 100).toFixed(2),
+            lineTotal: ((item.unitPriceCents * item.quantity) / 100).toFixed(2),
+          }))
+        );
+
+        if (giftProducts.length > 0) {
+          await tx.insert(orderItems).values(
+            giftProducts.map((p) => ({
+              orderId: order.id,
+              productId: p.id,
+              productName: p.name,
+              quantity: 1,
+              unitOfMeasure: p.unitOfMeasure,
+              shownAs: p.shownAs,
+              unitPrice: "0.00",
+              lineTotal: "0.00",
+            }))
+          );
+
+          const [deducted] = await tx
+            .update(users)
+            .set({ points: sql`${users.points} - ${totalGiftCost}` })
+            .where(and(eq(users.id, ctx.user.id), gte(users.points, totalGiftCost)))
+            .returning({ id: users.id });
+
+          if (!deducted) throw new Error("Not enough points for the selected gift items");
+
+          await tx.insert(pointTransactions).values({
+            userId: ctx.user.id,
+            amount: -totalGiftCost,
+            reason: "redemption",
+            orderId: order.id,
+          });
+        }
+
+        const pointsEarned = calcPointsEarned(totalCents / 100, ctx.user.isVip);
+        if (pointsEarned > 0) {
+          await tx
+            .update(users)
+            .set({ points: sql`${users.points} + ${pointsEarned}` })
+            .where(eq(users.id, ctx.user.id));
+        }
+
+        return order;
+      });
     }),
+
+  // Products the user can currently afford to redeem with points — "giftable"
+  // means products.giftablePoints > 0 (no separate giftable flag in schema).
+  getRedeemableItems: protectedProcedure.query(async ({ ctx }) => {
+    return db
+      .select()
+      .from(products)
+      .where(
+        and(
+          eq(products.active, true),
+          gt(products.giftablePoints, 0),
+          lte(products.giftablePoints, ctx.user.points)
+        )
+      )
+      .orderBy(products.giftablePoints);
+  }),
 });

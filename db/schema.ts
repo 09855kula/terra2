@@ -232,6 +232,11 @@ export const orderItems = pgTable("order_items", {
 
   productName: varchar("product_name", { length: 255 }),
   quantity: integer("quantity").notNull().default(1),
+  // Snapshot of the product tier's unit/shownAs at order time (not a live
+  // reference) — quantity is a multiplier of shownAs (e.g. 8 × "3.5g" = 28g),
+  // same convention as CartItem.tierUnitOfMeasure/tierShownAs.
+  unitOfMeasure: unitOfMeasureEnum("unit_of_measure"),
+  shownAs: varchar("shown_as", { length: 50 }),
   unitPrice: numeric("unit_price", { precision: 10, scale: 2 }),
   lineTotal: numeric("line_total", { precision: 10, scale: 2 }),
 });

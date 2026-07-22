@@ -252,6 +252,7 @@ async function main() {
           description: "Tropical mango gummies — 10mg THC per piece, 10 pieces per pack.",
           topEffect: "Relaxing", topFlavour: "Mango",
           basePriceCents: 2500, stock: 40, active: true, onSale: false,
+          giftablePoints: 20,
         },
         {
           tierId: gumId, externalId: "seed-edi-gum-watermelon-100",
@@ -259,6 +260,7 @@ async function main() {
           description: "Refreshing watermelon gummies — 10mg THC per piece, 10 pieces per pack.",
           topEffect: "Euphoric", topFlavour: "Watermelon",
           basePriceCents: 2500, stock: 35, active: true, onSale: false,
+          giftablePoints: 20,
         },
         {
           tierId: gumId, externalId: "seed-edi-gum-berry-200",
@@ -274,6 +276,7 @@ async function main() {
           description: "Rich 70% dark chocolate bar infused with 100mg THC.",
           topEffect: "Relaxing", topFlavour: "Dark Chocolate",
           basePriceCents: 3000, stock: 30, active: true, onSale: false,
+          giftablePoints: 20,
         },
         {
           tierId: chocId, externalId: "seed-edi-choc-milk-100",
@@ -281,6 +284,7 @@ async function main() {
           description: "Creamy milk chocolate bar infused with 100mg THC.",
           topEffect: "Euphoric", topFlavour: "Milk Chocolate",
           basePriceCents: 3000, stock: 25, active: true, onSale: false,
+          giftablePoints: 20,
         },
         // ── Dried Mushrooms ──
         {
@@ -326,6 +330,7 @@ async function main() {
           description: "Full-spectrum Blue Dream live resin in a 1g dab pod.",
           topEffect: "Energizing", topFlavour: "Blueberry",
           basePriceCents: 5500, stock: 15, active: true, onSale: false,
+          giftablePoints: 100,
         },
         {
           tierId: podsId, externalId: "seed-dab-pod-gelato",

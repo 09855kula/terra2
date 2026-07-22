@@ -96,7 +96,7 @@ export function CartSidebar() {
         </div>
 
         <div className="px-4 pb-4">
-          <PillButton href="/checkout" className="w-full h-11 text-[14px]">
+          <PillButton href="/cart" className="w-full h-11 text-[14px]">
             Checkout
           </PillButton>
         </div>

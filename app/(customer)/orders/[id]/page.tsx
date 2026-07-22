@@ -1,10 +1,10 @@
 "use client";
-import { use, useState } from "react";
+import { use } from "react";
 import { trpc } from "@/lib/trpc/client";
 import { formatDollars } from "@/lib/utils/discount";
+import { formatQuantityLabel } from "@/lib/utils/sizeOptions";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
-import { PillButton } from "@/components/ui/PillButton";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { PageWrapper } from "@/components/ui/PageWrapper";
@@ -15,20 +15,9 @@ export default function OrderPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const [confirming, setConfirming] = useState(false);
-  const utils = trpc.useUtils();
 
   const { data: order, isLoading } = trpc.orders.byId.useQuery({
     id: parseInt(id),
-  });
-
-  const cancelOrder = trpc.orders.cancel.useMutation({
-    onSuccess: () => {
-      utils.orders.byId.invalidate({ id: parseInt(id) });
-      utils.orders.getHistory.invalidate();
-      setConfirming(false);
-    },
-    onError: (e) => alert(e.message),
   });
 
   if (isLoading) return <LoadingScreen />;
@@ -42,7 +31,6 @@ export default function OrderPage({
       })
     : null;
 
-  const isCancellable = order.status === "pending";
   const isCancelled = order.status === "cancelled";
 
   return (
@@ -92,8 +80,16 @@ export default function OrderPage({
               idx < order.items.length - 1 ? "border-b border-[#6CAC4F]/20" : ""
             }`}
           >
-            <span className="text-[#616A5C]">
-              {item.productName} × {item.quantity}
+            <span className="text-[#616A5C] flex items-center gap-1.5">
+              {item.productName}{" "}
+              {item.unitOfMeasure
+                ? `· ${formatQuantityLabel(item.unitOfMeasure, item.shownAs, item.quantity)}`
+                : `× ${item.quantity}`}
+              {item.lineTotal === "0.00" && (
+                <span className="text-[9px] uppercase tracking-wide font-semibold text-white bg-[#6CAC4F] rounded px-1.5 py-0.5">
+                  Gift
+                </span>
+              )}
             </span>
             <span className="text-[#37751A] font-semibold">
               {formatDollars(item.lineTotal)}
@@ -116,41 +112,12 @@ export default function OrderPage({
         </Card>
       )}
 
-      {/* Cancel */}
-      {isCancellable && (
-        <div className="mt-2">
-          {confirming ? (
-            <Card className="px-5 py-4 space-y-3 text-center">
-              <p className="text-[#616A5C] text-sm font-medium">Cancel this order?</p>
-              <div className="flex gap-3">
-                <PillButton
-                  onClick={() => setConfirming(false)}
-                  variant="outline"
-                  className="flex-1 h-12 text-[14px]"
-                >
-                  Keep order
-                </PillButton>
-                <PillButton
-                  onClick={() => cancelOrder.mutate({ id: order.id })}
-                  disabled={cancelOrder.isPending}
-                  variant="danger"
-                  className="flex-1 h-12 text-[14px]"
-                >
-                  {cancelOrder.isPending ? "Cancelling…" : "Yes, cancel"}
-                </PillButton>
-              </div>
-            </Card>
-          ) : (
-            <PillButton
-              onClick={() => setConfirming(true)}
-              variant="danger"
-              className="w-full h-12 text-[14px]"
-            >
-              Cancel order
-            </PillButton>
-          )}
-        </div>
-      )}
+      <Link
+        href="/"
+        className="block text-center text-sm text-[#616A5C] opacity-70 hover:opacity-100 transition-opacity py-2"
+      >
+        ← Continue shopping
+      </Link>
     </PageWrapper>
   );
 }

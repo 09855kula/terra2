@@ -55,7 +55,7 @@ export default function MenuPage() {
             No products available
           </div>
         ) : (
-          <div className="space-y-2.5">
+          <div className="grid grid-cols-2 xl:grid-cols-3 gap-2.5">
             {products.map((p) => (
               <ProductCard key={p.id} product={p} salePct={calendar?.salePct ?? null} />
             ))}
@@ -65,7 +65,7 @@ export default function MenuPage() {
 
       {/* Fixed cart bar */}
       {itemCount > 0 && (
-        <div className="fixed bottom-5 left-0 right-0 px-6 z-40">
+        <div className="fixed bottom-5 left-0 right-0 px-6 z-40 xl:hidden">
           <Link
             href="/cart"
             className="flex items-center justify-between w-full max-w-sm mx-auto h-16 px-5 rounded-full text-white transition-opacity hover:opacity-90 active:scale-[0.98]"

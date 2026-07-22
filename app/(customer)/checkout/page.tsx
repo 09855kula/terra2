@@ -5,6 +5,7 @@ import { trpc } from "@/lib/trpc/client";
 import { useCart } from "@/lib/store/cart";
 import { formatCents } from "@/lib/utils/discount";
 import { getAvailableWindows, type DeliveryWindow } from "@/lib/utils/delivery";
+import { formatQuantityLabel } from "@/lib/utils/sizeOptions";
 import { SectionCard } from "@/components/ui/Card";
 import { PillButton } from "@/components/ui/PillButton";
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -19,7 +20,7 @@ const CHANGE_OPTIONS = ["$5", "$10", "$15", "$20", "$25", "No change", "Other"];
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, totalCents, clear } = useCart();
+  const { items, totalCents, clear, selectedGiftIds } = useCart();
   const total = totalCents();
 
   const [step, setStep] = useState<Step>(1);
@@ -67,12 +68,14 @@ export default function CheckoutPage() {
       timeslot: selectedWindow.label,
       change: changeValue === "No change" ? undefined : changeValue,
       comment: comment || undefined,
-      isUsePoint: false,
+      giftProductIds: selectedGiftIds,
       items: items.map((i) => ({
         productId: i.productId,
         productName: i.productName,
         quantity: i.quantity,
         unitPriceCents: i.unitPriceCents,
+        unitOfMeasure: i.tierUnitOfMeasure,
+        shownAs: i.tierShownAs,
       })),
     });
   };
@@ -274,7 +277,7 @@ export default function CheckoutPage() {
                   <span className="text-[#616A5C] flex items-center gap-1.5 flex-wrap min-w-0">
                     <span className="truncate">
                       {i.productName} × {i.categoryName && `${i.categoryName} · `}
-                      {i.quantity}
+                      {formatQuantityLabel(i.tierUnitOfMeasure, i.tierShownAs, i.quantity)}
                     </span>
                     {i.productType && (
                       <span className="text-[9px] uppercase tracking-wide font-semibold text-[#616A5C] border border-[#c8d9c2] rounded px-1 py-0.5 shrink-0">
