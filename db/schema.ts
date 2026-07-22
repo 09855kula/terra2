@@ -100,6 +100,10 @@ export const userAddresses = pgTable("user_addresses", {
   // for the order being placed right now. Approval UI is admin-panel-only,
   // out of scope until that milestone.
   isApproved: boolean("is_approved").notNull().default(false),
+  // Soft-delete flag — a rejected address is marked inactive rather than
+  // deleted, so the row (and its history) is preserved. Excluded from the
+  // pending-approvals queue and from what a customer can select at checkout.
+  isActive: boolean("is_active").notNull().default(true),
 
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

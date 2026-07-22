@@ -42,7 +42,10 @@ export const adminRouter = router({
   navCounts: adminProcedure.query(async () => {
     const [[orderRow], [addressRow], [accountRow]] = await Promise.all([
       db.select({ count: count() }).from(orders).where(eq(orders.status, "pending")),
-      db.select({ count: count() }).from(userAddresses).where(eq(userAddresses.isApproved, false)),
+      db
+        .select({ count: count() })
+        .from(userAddresses)
+        .where(and(eq(userAddresses.isApproved, false), eq(userAddresses.isActive, true))),
       db.select({ count: count() }).from(users).where(eq(users.profileConfirmed, false)),
     ]);
 
@@ -70,7 +73,7 @@ export const adminRouter = router({
         })
         .from(userAddresses)
         .innerJoin(users, eq(userAddresses.userId, users.id))
-        .where(eq(userAddresses.isApproved, false))
+        .where(and(eq(userAddresses.isApproved, false), eq(userAddresses.isActive, true)))
         .orderBy(desc(userAddresses.createdAt));
     }),
 
@@ -102,20 +105,21 @@ export const adminRouter = router({
         return updated;
       }),
 
-    // Reject deletes the address outright rather than leaving a permanent
-    // "rejected" record — same simple-delete pattern as address rejection
-    // elsewhere. Addresses have no dependents (nothing FKs to userAddresses),
-    // so this can't fail on a foreign-key constraint.
+    // Reject soft-deletes — sets isActive false rather than removing the row,
+    // so the address (and eventually its history) is preserved instead of
+    // lost. Excluded from the pending queue, nav badge count, and what a
+    // customer can select at checkout (see users.ts/orders.ts).
     rejectAddress: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
-        const [deleted] = await db
-          .delete(userAddresses)
+        const [updated] = await db
+          .update(userAddresses)
+          .set({ isActive: false, updatedAt: new Date() })
           .where(eq(userAddresses.id, input.id))
-          .returning({ id: userAddresses.id });
+          .returning();
 
-        if (!deleted) throw new TRPCError({ code: "NOT_FOUND" });
-        return deleted;
+        if (!updated) throw new TRPCError({ code: "NOT_FOUND" });
+        return updated;
       }),
 
     approveAccount: adminProcedure

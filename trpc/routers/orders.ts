@@ -119,7 +119,8 @@ export const ordersRouter = router({
           .where(
             and(
               eq(userAddresses.id, input.addressId),
-              eq(userAddresses.userId, ctx.user.id)
+              eq(userAddresses.userId, ctx.user.id),
+              eq(userAddresses.isActive, true)
             )
           );
 

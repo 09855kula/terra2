@@ -2,7 +2,7 @@ import { router, publicProcedure, protectedProcedure } from "../init";
 import { z } from "zod";
 import { db } from "@/db";
 import { users, userAddresses } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 export const usersRouter = router({
   create: publicProcedure
@@ -29,7 +29,7 @@ export const usersRouter = router({
     const addresses = await db
       .select()
       .from(userAddresses)
-      .where(eq(userAddresses.userId, ctx.user.id))
+      .where(and(eq(userAddresses.userId, ctx.user.id), eq(userAddresses.isActive, true)))
       .orderBy(desc(userAddresses.isPrimary));
     return { ...ctx.user, addresses };
   }),
