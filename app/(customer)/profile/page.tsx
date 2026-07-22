@@ -36,9 +36,6 @@ export default function ProfilePage() {
         <Card className="px-5 py-4">
           <SectionLabel>Points balance</SectionLabel>
           <p className="text-[#4C922C] font-bold text-3xl mt-1">{me?.points}</p>
-          <p className="text-xs text-[#616A5C] opacity-60 mt-1">
-            Spend rate TBD — pending client confirmation
-          </p>
         </Card>
       )}
 
