@@ -188,7 +188,7 @@ export const ordersRouter = router({
           .values({
             userId: ctx.user.id,
             districtId: addr.districtId ?? undefined,
-            address: addr.address,
+            address: addr.notes ? `${addr.address} — Note: ${addr.notes}` : addr.address,
             deliveryDate: new Date(input.deliveryDate),
             timeslot: input.timeslot,
             total: (totalCents / 100).toFixed(2),

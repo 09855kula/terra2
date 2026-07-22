@@ -329,6 +329,17 @@ export default function CheckoutPage() {
         <SectionCard label="Confirm order">
           <div className="p-4 space-y-4">
             <div className="space-y-1.5">
+              <SectionLabel>Address</SectionLabel>
+              <p className="text-[#37751A] font-semibold text-[15px]">
+                {selectedAddress?.label ?? "Address"}
+              </p>
+              <p className="text-sm text-[#616A5C] opacity-80">{selectedAddress?.address}</p>
+              {selectedAddress?.notes && (
+                <p className="text-sm text-[#616A5C] opacity-70 italic">{selectedAddress.notes}</p>
+              )}
+            </div>
+
+            <div className="border-t border-[#6CAC4F]/20 pt-3 space-y-1.5">
               <SectionLabel>Delivery</SectionLabel>
               <p className="text-[#37751A] font-semibold text-[15px]">
                 {selectedWindow?.dateLabel} · {selectedWindow?.label}
