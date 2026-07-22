@@ -94,6 +94,7 @@ export const userAddresses = pgTable("user_addresses", {
 
   label: varchar("label", { length: 100 }),
   address: text("address").notNull(),
+  notes: text("notes"),
   isPrimary: boolean("is_primary").notNull().default(false),
 
   createdAt: timestamp("created_at", { withTimezone: true })

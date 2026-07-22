@@ -1,0 +1,1 @@
+ALTER TABLE "user_addresses" ADD COLUMN "notes" text;
