@@ -162,7 +162,8 @@ export default function ApprovalsPage() {
 
   const addresses = trpc.admin.approvals.addresses.useQuery();
   const accounts = trpc.admin.approvals.accounts.useQuery();
-  const districts = trpc.admin.approvals.districts.useQuery();
+  // Districts are static reference data — no need to refetch on every mount/focus.
+  const districts = trpc.admin.approvals.districts.useQuery(undefined, { staleTime: 5 * 60_000 });
 
   const addressCount = addresses.data?.length ?? 0;
   const accountCount = accounts.data?.length ?? 0;
