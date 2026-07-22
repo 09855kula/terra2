@@ -45,6 +45,14 @@ export function formatDateLabel(date: Date): string {
   });
 }
 
+// "10:00" -> "10:00 AM", "18:00" -> "6:00 PM"
+export function formatTime12h(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, "0")} ${period}`;
+}
+
 export interface DeliveryWindow {
   scheduleId: number;
   dayOfWeek: number;
@@ -91,7 +99,7 @@ export function getAvailableWindows(
         dayOfWeek: dow,
         windowStart: start,
         windowEnd: end,
-        label: `${start} – ${end}`,
+        label: `${formatTime12h(start)} – ${formatTime12h(end)}`,
         date: new Date(date),
         dateLabel: formatDateLabel(date),
         isPast,
