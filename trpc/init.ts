@@ -7,11 +7,12 @@ import { eq } from "drizzle-orm";
 
 export async function createContext({
   req,
+  resHeaders,
 }: {
   req: Request;
-  resHeaders?: Headers;
+  resHeaders: Headers;
 }) {
-  return { req, resHeaders: new Headers() };
+  return { req, resHeaders };
 }
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
