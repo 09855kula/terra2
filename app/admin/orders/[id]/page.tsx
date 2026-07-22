@@ -11,14 +11,7 @@ import { PageWrapper } from "@/components/ui/PageWrapper";
 import { DeliveryUpdateButtons } from "@/components/admin/DeliveryUpdateButtons";
 import { StatusSelect } from "@/components/admin/StatusSelect";
 import { DELIVERY_UPDATE_LABELS, type DeliveryUpdateStage } from "@/lib/utils/deliveryUpdates";
-
-function formatDateTime(value: string | Date | null): string {
-  if (!value) return "—";
-  return new Date(value).toLocaleString("en-CA", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
+import { formatDateTime } from "@/lib/utils/datetime";
 
 export default function AdminOrderDetailPage({
   params,

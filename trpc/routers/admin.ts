@@ -4,11 +4,12 @@ import {
   orders,
   orderItems,
   users,
+  userAddresses,
   districts,
   pointTransactions,
   orderStatusEnum,
 } from "@/db/schema";
-import { eq, desc, and, gte, lte } from "drizzle-orm";
+import { eq, desc, and, gte, lte, count } from "drizzle-orm";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
@@ -34,6 +35,139 @@ export const adminRouter = router({
   me: adminProcedure.query(({ ctx }) => ({ id: ctx.user.id, isAdmin: ctx.user.isAdmin })),
 
   orderStatuses: adminProcedure.query(() => orderStatusEnum.enumValues),
+
+  // Badge counts for the admin nav — "new" orders = pending (the entry point
+  // to the status workflow), approvals = pending addresses + pending accounts
+  // combined into a single nav badge.
+  navCounts: adminProcedure.query(async () => {
+    const [[orderRow], [addressRow], [accountRow]] = await Promise.all([
+      db.select({ count: count() }).from(orders).where(eq(orders.status, "pending")),
+      db.select({ count: count() }).from(userAddresses).where(eq(userAddresses.isApproved, false)),
+      db.select({ count: count() }).from(users).where(eq(users.profileConfirmed, false)),
+    ]);
+
+    return {
+      newOrders: orderRow.count,
+      pendingApprovals: addressRow.count + accountRow.count,
+    };
+  }),
+
+  approvals: router({
+    districts: adminProcedure.query(() => db.select().from(districts).orderBy(districts.sortOrder)),
+
+    addresses: adminProcedure.query(async () => {
+      return db
+        .select({
+          id: userAddresses.id,
+          label: userAddresses.label,
+          address: userAddresses.address,
+          notes: userAddresses.notes,
+          districtId: userAddresses.districtId,
+          createdAt: userAddresses.createdAt,
+          customerFirstName: users.firstName,
+          customerLastName: users.lastName,
+          customerPhone: users.phone,
+        })
+        .from(userAddresses)
+        .innerJoin(users, eq(userAddresses.userId, users.id))
+        .where(eq(userAddresses.isApproved, false))
+        .orderBy(desc(userAddresses.createdAt));
+    }),
+
+    accounts: adminProcedure.query(async () => {
+      return db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          phone: users.phone,
+          email: users.email,
+          createdAt: users.createdAt,
+        })
+        .from(users)
+        .where(eq(users.profileConfirmed, false))
+        .orderBy(desc(users.createdAt));
+    }),
+
+    approveAddress: adminProcedure
+      .input(z.object({ id: z.number(), districtId: z.number() }))
+      .mutation(async ({ input }) => {
+        const [updated] = await db
+          .update(userAddresses)
+          .set({ isApproved: true, districtId: input.districtId, updatedAt: new Date() })
+          .where(eq(userAddresses.id, input.id))
+          .returning();
+
+        if (!updated) throw new TRPCError({ code: "NOT_FOUND" });
+        return updated;
+      }),
+
+    // Reject deletes the address outright rather than leaving a permanent
+    // "rejected" record — same simple-delete pattern as address rejection
+    // elsewhere. Addresses have no dependents (nothing FKs to userAddresses),
+    // so this can't fail on a foreign-key constraint.
+    rejectAddress: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const [deleted] = await db
+          .delete(userAddresses)
+          .where(eq(userAddresses.id, input.id))
+          .returning({ id: userAddresses.id });
+
+        if (!deleted) throw new TRPCError({ code: "NOT_FOUND" });
+        return deleted;
+      }),
+
+    approveAccount: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const [updated] = await db
+          .update(users)
+          .set({ profileConfirmed: true, updatedAt: new Date() })
+          .where(eq(users.id, input.id))
+          .returning();
+
+        if (!updated) throw new TRPCError({ code: "NOT_FOUND" });
+        return updated;
+      }),
+
+    // Reject deletes the user row. Unconfirmed users are fully blocked at
+    // login (verifyOtp throws before issuing a JWT), so a pending account
+    // can't have placed orders, added addresses, or done anything else that
+    // would FK-reference it through the normal app flow — deleting is safe
+    // in the common case. The one theoretical edge is another user's
+    // referredById pointing at this row (that field isn't set anywhere in
+    // the current API, only possibly via legacy-imported data), so this is
+    // wrapped to surface a clear error instead of a raw 500 if a foreign-key
+    // constraint ever blocks it.
+    rejectAccount: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        try {
+          const [deleted] = await db
+            .delete(users)
+            .where(eq(users.id, input.id))
+            .returning({ id: users.id });
+
+          if (!deleted) throw new TRPCError({ code: "NOT_FOUND" });
+          return deleted;
+        } catch (err) {
+          if (err instanceof TRPCError) throw err;
+          // drizzle-orm wraps the underlying postgres.js error in a
+          // DrizzleQueryError — the actual PostgresError (and its .code)
+          // lands on .cause, not on the wrapper itself.
+          const pgCode = (err as { cause?: { code?: string } }).cause?.code;
+          if (pgCode === "23503") {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message:
+                "Can't reject — this account has related records (orders, addresses, or referrals) and can't be deleted.",
+            });
+          }
+          throw err;
+        }
+      }),
+  }),
 
   orders: router({
     // Newest-first only — no ETA-based reordering here, that's a separate
