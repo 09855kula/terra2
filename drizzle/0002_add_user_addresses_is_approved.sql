@@ -1,0 +1,1 @@
+ALTER TABLE "user_addresses" ADD COLUMN "is_approved" boolean DEFAULT false NOT NULL;

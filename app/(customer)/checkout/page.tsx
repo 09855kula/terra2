@@ -13,7 +13,7 @@ import { PageWrapper } from "@/components/ui/PageWrapper";
 import { CheckoutSidebar } from "@/components/CheckoutSidebar";
 import { AddressForm } from "@/components/AddressForm";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowLeft01Icon, ArrowRight01Icon, PencilEdit01Icon } from "@hugeicons/core-free-icons";
+import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -27,7 +27,6 @@ export default function CheckoutPage() {
   const [step, setStep] = useState<Step>(1);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [addingAddress, setAddingAddress] = useState(false);
-  const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
   const [devBypassCutoff, setDevBypassCutoff] = useState(false);
   const isDev = process.env.NODE_ENV !== "production";
   const [selectedWindow, setSelectedWindow] = useState<DeliveryWindow | null>(null);
@@ -151,52 +150,30 @@ export default function CheckoutPage() {
               </p>
             )}
 
-            {addresses.map((addr) =>
-              editingAddressId === addr.id ? (
-                <AddressForm
-                  key={addr.id}
-                  initial={{
-                    id: addr.id,
-                    label: addr.label ?? "",
-                    address: addr.address,
-                    notes: addr.notes ?? "",
-                    districtId: addr.districtId,
-                  }}
-                  onSaved={(id) => {
-                    setSelectedAddressId(id);
-                    setEditingAddressId(null);
-                  }}
-                  onCancel={() => setEditingAddressId(null)}
-                />
-              ) : (
-                <div
-                  key={addr.id}
-                  className={`w-full rounded-xl border-[2px] px-4 py-3 flex items-center gap-2 transition-colors ${
-                    selectedAddressId === addr.id
-                      ? "border-[#6CAC4F] bg-[#EFF8DD]"
-                      : "border-[rgba(217,217,217,0.5)] bg-[#F7F7F7] hover:border-[#8DC573]"
-                  }`}
-                >
-                  <button
-                    onClick={() => setSelectedAddressId(addr.id)}
-                    className="flex-1 min-w-0 text-left"
-                  >
-                    <p className="font-semibold text-[#37751A] text-[14px]">{addr.label ?? "Address"}</p>
-                    <p className="text-sm text-[#616A5C] opacity-80 mt-0.5">{addr.address}</p>
-                    {addr.notes && (
-                      <p className="text-xs text-[#616A5C] opacity-60 mt-0.5 italic">{addr.notes}</p>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setEditingAddressId(addr.id)}
-                    className="shrink-0 p-1.5 text-[#616A5C] opacity-60 hover:opacity-100 hover:text-[#37751A] transition-colors"
-                    aria-label={`Edit ${addr.label ?? "address"}`}
-                  >
-                    <HugeiconsIcon icon={PencilEdit01Icon} size={18} color="currentColor" />
-                  </button>
+            {addresses.map((addr) => (
+              <button
+                key={addr.id}
+                onClick={() => setSelectedAddressId(addr.id)}
+                className={`w-full text-left rounded-xl border-[2px] px-4 py-3 transition-colors ${
+                  selectedAddressId === addr.id
+                    ? "border-[#6CAC4F] bg-[#EFF8DD]"
+                    : "border-[rgba(217,217,217,0.5)] bg-[#F7F7F7] hover:border-[#8DC573]"
+                }`}
+              >
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <p className="font-semibold text-[#37751A] text-[14px]">{addr.label ?? "Address"}</p>
+                  {!addr.isApproved && (
+                    <span className="text-[9px] uppercase tracking-wide font-semibold text-white bg-[#6CAC4F] rounded px-1.5 py-0.5">
+                      Pending approval
+                    </span>
+                  )}
                 </div>
-              )
-            )}
+                <p className="text-sm text-[#616A5C] opacity-80 mt-0.5">{addr.address}</p>
+                {addr.notes && (
+                  <p className="text-xs text-[#616A5C] opacity-60 mt-0.5 italic">{addr.notes}</p>
+                )}
+              </button>
+            ))}
 
             {addingAddress ? (
               <AddressForm
@@ -243,7 +220,7 @@ export default function CheckoutPage() {
             {windows.length === 0 ? (
               <p className="text-[#616A5C] text-sm text-center py-4">
                 {selectedAddress && !selectedAddress.districtId ? (
-                  <>This address is missing a delivery zone — go back and edit it to add one.</>
+                  <>No delivery schedule set for this address yet — contact us to get it assigned.</>
                 ) : (
                   "No delivery windows available today or tomorrow."
                 )}

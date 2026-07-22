@@ -6,33 +6,18 @@ import { PillButton } from "@/components/ui/PillButton";
 const inputClass =
   "w-full bg-[#F7F7F7] border-[2px] border-[rgba(217,217,217,0.3)] rounded-xl px-4 py-3 text-[15px] text-[#616A5C] focus:outline-none focus:border-[#8DC573] transition-colors placeholder:opacity-50";
 
-interface AddressFormValues {
-  id?: number;
-  label: string;
-  address: string;
-  notes: string;
-  districtId: number | null;
-}
-
 export function AddressForm({
-  initial,
   onSaved,
   onCancel,
 }: {
-  initial?: AddressFormValues;
   onSaved: (addressId: number) => void;
   onCancel: () => void;
 }) {
   const utils = trpc.useUtils();
-  const [label, setLabel] = useState(initial?.label ?? "");
-  const [address, setAddress] = useState(initial?.address ?? "");
-  const [notes, setNotes] = useState(initial?.notes ?? "");
-  const [districtId, setDistrictId] = useState<number | null>(initial?.districtId ?? null);
+  const [label, setLabel] = useState("");
+  const [address, setAddress] = useState("");
+  const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
-
-  const { data: districts = [] } = trpc.users.districts.useQuery();
-
-  const isEditing = initial?.id !== undefined;
 
   const addAddress = trpc.users.addAddress.useMutation({
     onSuccess: (addr) => {
@@ -42,36 +27,16 @@ export function AddressForm({
     onError: (e) => setError(e.message),
   });
 
-  const updateAddress = trpc.users.updateAddress.useMutation({
-    onSuccess: (addr) => {
-      utils.users.me.invalidate();
-      onSaved(addr.id);
-    },
-    onError: (e) => setError(e.message),
-  });
-
-  const isPending = addAddress.isPending || updateAddress.isPending;
-
   const handleSave = () => {
     if (address.trim().length < 5) {
       setError("Enter a full delivery address");
       return;
     }
-    if (districtId === null) {
-      setError("Select a district so we can match your delivery schedule");
-      return;
-    }
-    const payload = {
+    addAddress.mutate({
       address: address.trim(),
       label: label.trim() || undefined,
       notes: notes.trim() || undefined,
-      districtId,
-    };
-    if (isEditing) {
-      updateAddress.mutate({ id: initial.id!, ...payload });
-    } else {
-      addAddress.mutate(payload);
-    }
+    });
   };
 
   return (
@@ -86,20 +51,10 @@ export function AddressForm({
       <textarea
         value={address}
         onChange={(e) => { setAddress(e.target.value); setError(""); }}
-        placeholder="Full delivery address"
+        placeholder="Delivery address"
         rows={2}
         className={`${inputClass} resize-none`}
       />
-      <select
-        value={districtId ?? ""}
-        onChange={(e) => setDistrictId(e.target.value ? Number(e.target.value) : null)}
-        className={inputClass}
-      >
-        <option value="">Select district (required for delivery scheduling)</option>
-        {districts.map((d) => (
-          <option key={d.id} value={d.id}>{d.name ?? d.code}</option>
-        ))}
-      </select>
       <textarea
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
@@ -114,8 +69,8 @@ export function AddressForm({
         <PillButton onClick={onCancel} variant="outline" className="flex-1 h-11 text-[14px]">
           Cancel
         </PillButton>
-        <PillButton onClick={handleSave} disabled={isPending} className="flex-1 h-11 text-[14px]">
-          {isPending ? "Saving…" : "Save address"}
+        <PillButton onClick={handleSave} disabled={addAddress.isPending} className="flex-1 h-11 text-[14px]">
+          {addAddress.isPending ? "Saving…" : "Save address"}
         </PillButton>
       </div>
     </div>

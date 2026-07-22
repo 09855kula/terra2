@@ -1,8 +1,8 @@
 import { router, publicProcedure, protectedProcedure } from "../init";
 import { z } from "zod";
 import { db } from "@/db";
-import { users, userAddresses, districts } from "@/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { users, userAddresses } from "@/db/schema";
+import { eq, desc } from "drizzle-orm";
 
 export const usersRouter = router({
   create: publicProcedure
@@ -40,7 +40,6 @@ export const usersRouter = router({
         address: z.string().min(5),
         label: z.string().optional(),
         notes: z.string().optional(),
-        districtId: z.number(),
         isPrimary: z.boolean().default(false),
       })
     )
@@ -51,45 +50,12 @@ export const usersRouter = router({
           .set({ isPrimary: false })
           .where(eq(userAddresses.userId, ctx.user.id));
       }
+      // isApproved defaults to false (admin-review flag) — not settable by the
+      // customer; still fine to use for the order being placed right now.
       const [addr] = await db
         .insert(userAddresses)
         .values({ userId: ctx.user.id, ...input })
         .returning();
       return addr;
     }),
-
-  updateAddress: protectedProcedure
-    .input(
-      z.object({
-        id: z.number(),
-        address: z.string().min(5),
-        label: z.string().optional(),
-        notes: z.string().optional(),
-        districtId: z.number(),
-        isPrimary: z.boolean().default(false),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { id, ...fields } = input;
-
-      if (fields.isPrimary) {
-        await db
-          .update(userAddresses)
-          .set({ isPrimary: false })
-          .where(eq(userAddresses.userId, ctx.user.id));
-      }
-
-      const [addr] = await db
-        .update(userAddresses)
-        .set({ ...fields, updatedAt: new Date() })
-        .where(and(eq(userAddresses.id, id), eq(userAddresses.userId, ctx.user.id)))
-        .returning();
-
-      if (!addr) throw new Error("Address not found");
-      return addr;
-    }),
-
-  districts: protectedProcedure.query(async () => {
-    return db.select().from(districts).orderBy(districts.sortOrder);
-  }),
 });

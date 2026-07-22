@@ -96,6 +96,10 @@ export const userAddresses = pgTable("user_addresses", {
   address: text("address").notNull(),
   notes: text("notes"),
   isPrimary: boolean("is_primary").notNull().default(false),
+  // Admin-reviewed flag — new addresses start unapproved but are still usable
+  // for the order being placed right now. Approval UI is admin-panel-only,
+  // out of scope until that milestone.
+  isApproved: boolean("is_approved").notNull().default(false),
 
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

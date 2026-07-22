@@ -15,6 +15,13 @@
       "when": 1784738395504,
       "tag": "0001_add_user_addresses_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784739335954,
+      "tag": "0002_add_user_addresses_is_approved",
+      "breakpoints": true
     }
   ]
 }
