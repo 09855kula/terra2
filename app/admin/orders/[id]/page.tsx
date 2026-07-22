@@ -159,7 +159,9 @@ export default function AdminOrderDetailPage({
           {order.change && (
             <div className="flex justify-between items-center pt-1">
               <span className="text-[#616A5C] opacity-70">Change needed</span>
-              <span className="text-orange-600 font-bold text-xl">{order.change}</span>
+              <span className="text-orange-600 font-bold text-xl">
+                {order.change.replace(/^\$?/, "$")}
+              </span>
             </div>
           )}
         </div>
