@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 import { useCart } from "@/lib/store/cart";
@@ -9,6 +9,9 @@ import { SectionCard } from "@/components/ui/Card";
 import { PillButton } from "@/components/ui/PillButton";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { PageWrapper } from "@/components/ui/PageWrapper";
+import { CheckoutSidebar } from "@/components/CheckoutSidebar";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -30,8 +33,11 @@ export default function CheckoutPage() {
   const { data: me } = trpc.users.me.useQuery();
   const { data: schedules = [] } = trpc.orders.getDeliverySchedules.useQuery();
 
+  const [orderPlaced, setOrderPlaced] = useState(false);
+
   const createOrder = trpc.orders.create.useMutation({
     onSuccess: (order) => {
+      setOrderPlaced(true);
       clear();
       router.push(`/orders/${order.id}`);
     },
@@ -44,6 +50,13 @@ export default function CheckoutPage() {
     ? schedules.filter((s) => s.districtId === selectedAddress.districtId)
     : schedules;
   const windows = getAvailableWindows(districtSchedules);
+
+  // Mirrors each step's own "Next" gating — the arrows can't skip ahead of data we don't have yet.
+  const canAdvanceFrom = (s: Step) => {
+    if (s === 1) return !!selectedAddressId;
+    if (s === 2) return !!selectedWindow;
+    return true;
+  };
 
   const handlePlaceOrder = () => {
     if (!selectedAddressId || !selectedWindow) return;
@@ -64,15 +77,39 @@ export default function CheckoutPage() {
     });
   };
 
+  useEffect(() => {
+    if (items.length === 0 && !orderPlaced) router.push("/");
+  }, [items.length, orderPlaced, router]);
+
   if (items.length === 0) {
-    if (typeof window !== "undefined") router.push("/");
     return null;
   }
 
+  const changeValue = change === "Other" ? customChange || "Custom" : change;
+
   return (
-    <PageWrapper className="gap-6">
+    <>
+      <CheckoutSidebar
+        items={items}
+        totalCents={total}
+        step={step}
+        addressLabel={step > 1 && selectedAddress ? selectedAddress.label ?? "Address" : undefined}
+        addressText={step > 1 ? selectedAddress?.address : undefined}
+        windowLabel={
+          step > 2 && selectedWindow ? `${selectedWindow.dateLabel} · ${selectedWindow.label}` : undefined
+        }
+        changeLabel={step > 3 ? changeValue : undefined}
+      />
+      <PageWrapper className="gap-6">
       {/* Step progress */}
       <div className="flex items-center gap-2">
+        <button
+          onClick={() => (step === 1 ? router.push("/") : setStep((s) => (s - 1) as Step))}
+          className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[#37751A] border border-[#8DC573] hover:bg-[#EFF8DD] transition-colors"
+        >
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={16} color="currentColor" />
+        </button>
+
         {([1, 2, 3, 4] as Step[]).map((s) => (
           <div
             key={s}
@@ -81,6 +118,18 @@ export default function CheckoutPage() {
             }`}
           />
         ))}
+
+        <button
+          onClick={() => canAdvanceFrom(step) && setStep((s) => (s + 1) as Step)}
+          tabIndex={step < 4 && canAdvanceFrom(step) ? 0 : -1}
+          className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[#37751A] border border-[#8DC573] transition-opacity duration-200 ${
+            step < 4 && canAdvanceFrom(step)
+              ? "opacity-100 hover:bg-[#EFF8DD]"
+              : "opacity-0 pointer-events-none"
+          }`}
+        >
+          <HugeiconsIcon icon={ArrowRight01Icon} size={16} color="currentColor" />
+        </button>
       </div>
 
       {step === 1 && (
@@ -177,7 +226,7 @@ export default function CheckoutPage() {
                 <button
                   key={opt}
                   onClick={() => setChange(opt)}
-                  className={`rounded-xl py-3 text-[13px] font-semibold transition-colors ${
+                  className={`rounded-xl py-6 text-[26px] font-semibold transition-colors ${
                     change === opt
                       ? "bg-[rgba(81,170,39,0.5)] text-[#2F521F]"
                       : "bg-[rgba(81,170,39,0.12)] text-[#4B8331] hover:bg-[rgba(81,170,39,0.25)]"
@@ -193,7 +242,7 @@ export default function CheckoutPage() {
                 placeholder="Enter amount (e.g. $35)"
                 value={customChange}
                 onChange={(e) => setCustomChange(e.target.value)}
-                className="w-full bg-[#F7F7F7] border-[2px] border-[rgba(217,217,217,0.3)] rounded-xl px-4 py-3 text-[15px] text-[#616A5C] focus:outline-none focus:border-[#8DC573] transition-colors"
+                className="w-full bg-[#F7F7F7] border-[2px] border-[rgba(217,217,217,0.3)] rounded-xl px-8 py-6 text-[30px] text-[#616A5C] focus:outline-none focus:border-[#8DC573] transition-colors"
               />
             )}
             <div className="flex gap-3 mt-2">
@@ -221,9 +270,19 @@ export default function CheckoutPage() {
             <div className="border-t border-[#6CAC4F]/20 pt-3 space-y-2">
               <SectionLabel>Items</SectionLabel>
               {items.map((i) => (
-                <div key={i.productId} className="flex justify-between text-sm">
-                  <span className="text-[#616A5C]">{i.productName} × {i.quantity}</span>
-                  <span className="text-[#37751A] font-semibold">{formatCents(i.unitPriceCents * i.quantity)}</span>
+                <div key={i.productId} className="flex justify-between items-start text-sm gap-2">
+                  <span className="text-[#616A5C] flex items-center gap-1.5 flex-wrap min-w-0">
+                    <span className="truncate">
+                      {i.productName} × {i.categoryName && `${i.categoryName} · `}
+                      {i.quantity}
+                    </span>
+                    {i.productType && (
+                      <span className="text-[9px] uppercase tracking-wide font-semibold text-[#616A5C] border border-[#c8d9c2] rounded px-1 py-0.5 shrink-0">
+                        {i.productType}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-[#37751A] font-semibold shrink-0">{formatCents(i.unitPriceCents * i.quantity)}</span>
                 </div>
               ))}
             </div>
@@ -263,6 +322,7 @@ export default function CheckoutPage() {
           </div>
         </SectionCard>
       )}
-    </PageWrapper>
+      </PageWrapper>
+    </>
   );
 }
