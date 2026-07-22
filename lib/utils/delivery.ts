@@ -71,6 +71,9 @@ interface RawSchedule {
   windowEnd: string | null;
 }
 
+// Delivery windows are district-agnostic from the customer's point of view —
+// every district/driver's schedule for a given day collapses into one row per
+// distinct start/end time, not one row per district or driver.
 export function getAvailableWindows(
   schedules: RawSchedule[],
   options?: { bypassCutoff?: boolean }
@@ -86,7 +89,13 @@ export function getAvailableWindows(
 
     const daySchedules = schedules.filter((s) => s.dayOfWeek === dow);
 
+    const seen = new Map<string, RawSchedule>();
     for (const s of daySchedules) {
+      const key = `${s.windowStart ?? "00:00"}-${s.windowEnd ?? "23:59"}`;
+      if (!seen.has(key)) seen.set(key, s);
+    }
+
+    for (const s of seen.values()) {
       const start = s.windowStart ?? "00:00";
       const end = s.windowEnd ?? "23:59";
       const [h, m] = start.split(":").map(Number);

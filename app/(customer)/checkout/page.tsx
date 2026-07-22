@@ -51,12 +51,11 @@ export default function CheckoutPage() {
 
   const addresses = me?.addresses ?? [];
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
-  // Every district has its own driver/window schedule — an address without a
-  // district can't be scoped to any of them, so it gets none (not all of them).
-  const districtSchedules = selectedAddress?.districtId
-    ? schedules.filter((s) => s.districtId === selectedAddress.districtId)
-    : [];
-  const windows = getAvailableWindows(districtSchedules, { bypassCutoff: isDev && devBypassCutoff });
+  // Delivery windows are district-agnostic to the customer — district is an
+  // admin/driver-routing concern, not something that gates which windows a
+  // customer can pick. getAvailableWindows collapses same-time schedules
+  // across districts/drivers into one row per distinct window.
+  const windows = getAvailableWindows(schedules, { bypassCutoff: isDev && devBypassCutoff });
 
   // Mirrors each step's own "Next" gating — the arrows can't skip ahead of data we don't have yet.
   const canAdvanceFrom = (s: Step) => {
@@ -219,11 +218,7 @@ export default function CheckoutPage() {
             )}
             {windows.length === 0 ? (
               <p className="text-[#616A5C] text-sm text-center py-4">
-                {selectedAddress && !selectedAddress.districtId ? (
-                  <>No delivery schedule set for this address yet — contact us to get it assigned.</>
-                ) : (
-                  "No delivery windows available today or tomorrow."
-                )}
+                No delivery windows available today or tomorrow.
               </p>
             ) : (
               windows.map((w) => {
