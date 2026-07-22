@@ -11,18 +11,13 @@ import {
 import { eq, desc, and, gte, lte } from "drizzle-orm";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import {
+  DELIVERY_UPDATE_STAGES,
+  DELIVERY_UPDATE_LABELS,
+  type DeliveryUpdateStage,
+} from "@/lib/utils/deliveryUpdates";
 
-const DELIVERY_STAGES = ["20min", "10min", "5min", "here"] as const;
-type DeliveryStage = (typeof DELIVERY_STAGES)[number];
-
-const DELIVERY_UPDATE_LABELS: Record<DeliveryStage, string> = {
-  "20min": "20 min",
-  "10min": "10 min",
-  "5min": "5 min",
-  here: "Here",
-};
-
-function deliveryUpdateMessage(stage: DeliveryStage, firstName: string): string {
+function deliveryUpdateMessage(stage: DeliveryUpdateStage, firstName: string): string {
   switch (stage) {
     case "20min":
       return `Hey ${firstName}, your Terra order is on its way! ETA ~20 min.`;
@@ -71,6 +66,8 @@ export const adminRouter = router({
             totalAfterDiscount: orders.totalAfterDiscount,
             deliveryDate: orders.deliveryDate,
             createdAt: orders.createdAt,
+            lastDeliveryUpdateStage: orders.lastDeliveryUpdateStage,
+            lastDeliveryUpdateAt: orders.lastDeliveryUpdateAt,
             customerFirstName: users.firstName,
             customerLastName: users.lastName,
           })
@@ -138,7 +135,7 @@ export const adminRouter = router({
       .input(
         z.object({
           id: z.number(),
-          stage: z.enum(DELIVERY_STAGES),
+          stage: z.enum(DELIVERY_UPDATE_STAGES),
         }),
       )
       .mutation(async ({ input }) => {
@@ -153,10 +150,16 @@ export const adminRouter = router({
         const message = deliveryUpdateMessage(input.stage, row.firstName ?? "there");
         console.log(`[SMS to ${row.phone}]: ${message}`);
 
+        const sentAt = new Date();
+        await db
+          .update(orders)
+          .set({ lastDeliveryUpdateStage: input.stage, lastDeliveryUpdateAt: sentAt })
+          .where(eq(orders.id, input.id));
+
         return {
           label: DELIVERY_UPDATE_LABELS[input.stage],
           phone: row.phone,
-          sentAt: new Date().toISOString(),
+          sentAt: sentAt.toISOString(),
         };
       }),
   }),

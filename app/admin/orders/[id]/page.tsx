@@ -10,6 +10,7 @@ import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { PageWrapper } from "@/components/ui/PageWrapper";
 import { DeliveryUpdateButtons } from "@/components/admin/DeliveryUpdateButtons";
 import { StatusSelect } from "@/components/admin/StatusSelect";
+import { DELIVERY_UPDATE_LABELS, type DeliveryUpdateStage } from "@/lib/utils/deliveryUpdates";
 
 function formatDateTime(value: string | Date | null): string {
   if (!value) return "—";
@@ -63,7 +64,19 @@ export default function AdminOrderDetailPage({
       {order.status === "accepted" && (
         <Card className="px-5 py-4 space-y-3">
           <SectionLabel>Delivery update</SectionLabel>
-          <DeliveryUpdateButtons orderId={order.id} />
+          <DeliveryUpdateButtons
+            orderId={order.id}
+            initialLastSent={
+              order.lastDeliveryUpdateStage && order.lastDeliveryUpdateAt
+                ? {
+                    label:
+                      DELIVERY_UPDATE_LABELS[order.lastDeliveryUpdateStage as DeliveryUpdateStage],
+                    phone: order.customer.phone,
+                    sentAt: order.lastDeliveryUpdateAt.toISOString(),
+                  }
+                : null
+            }
+          />
         </Card>
       )}
 

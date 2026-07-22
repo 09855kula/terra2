@@ -1,32 +1,43 @@
 "use client";
 import { useRef, useState } from "react";
 import { trpc } from "@/lib/trpc/client";
+import { DELIVERY_UPDATE_LABELS, type DeliveryUpdateStage } from "@/lib/utils/deliveryUpdates";
 
 const STAGES = [
-  { key: "20min", label: "20 min" },
-  { key: "10min", label: "10 min" },
-  { key: "5min", label: "5 min" },
-  { key: "here", label: "Here" },
-] as const;
+  { key: "20min", label: DELIVERY_UPDATE_LABELS["20min"] },
+  { key: "10min", label: DELIVERY_UPDATE_LABELS["10min"] },
+  { key: "5min", label: DELIVERY_UPDATE_LABELS["5min"] },
+  { key: "here", label: DELIVERY_UPDATE_LABELS.here },
+] as const satisfies { key: DeliveryUpdateStage; label: string }[];
 
-type StageKey = (typeof STAGES)[number]["key"];
+type StageKey = DeliveryUpdateStage;
 
 const CONFIRM_WINDOW_MS = 4000;
 const SENT_FLASH_MS = 2500;
 
-export function DeliveryUpdateButtons({ orderId }: { orderId: number }) {
+type LastSent = { label: string; phone: string; sentAt: string };
+
+export function DeliveryUpdateButtons({
+  orderId,
+  initialLastSent = null,
+}: {
+  orderId: number;
+  initialLastSent?: LastSent | null;
+}) {
   const [awaiting, setAwaiting] = useState<StageKey | null>(null);
   const [justSent, setJustSent] = useState<StageKey | null>(null);
-  const [lastSent, setLastSent] = useState<{ label: string; phone: string; sentAt: string } | null>(null);
+  const [lastSent, setLastSent] = useState<LastSent | null>(initialLastSent);
   const confirmTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sentTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const utils = trpc.useUtils();
   const sendUpdate = trpc.admin.orders.sendDeliveryUpdate.useMutation({
     onSuccess: (result, variables) => {
       setLastSent(result);
       setJustSent(variables.stage);
       if (sentTimeout.current) clearTimeout(sentTimeout.current);
       sentTimeout.current = setTimeout(() => setJustSent(null), SENT_FLASH_MS);
+      utils.admin.orders.list.invalidate();
     },
   });
 

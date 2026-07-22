@@ -4,6 +4,7 @@ import Link from "next/link";
 import { trpc } from "@/lib/trpc/client";
 import { formatDollars } from "@/lib/utils/discount";
 import { getNowInWinnipeg } from "@/lib/utils/delivery";
+import { DELIVERY_UPDATE_LABELS, type DeliveryUpdateStage } from "@/lib/utils/deliveryUpdates";
 import { Card } from "@/components/ui/Card";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
 import { PageWrapper } from "@/components/ui/PageWrapper";
@@ -115,6 +116,16 @@ export default function AdminOrdersListPage() {
                         day: "numeric",
                       })}`}
                   </p>
+                  {order.lastDeliveryUpdateStage && order.lastDeliveryUpdateAt && (
+                    <p className="text-xs text-[#6CAC4F] font-medium mt-0.5">
+                      Sent {DELIVERY_UPDATE_LABELS[order.lastDeliveryUpdateStage as DeliveryUpdateStage]}{" "}
+                      at{" "}
+                      {new Date(order.lastDeliveryUpdateAt).toLocaleTimeString("en-CA", {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  )}
                 </div>
                 <span className="text-[#3A6426] font-semibold">
                   {formatDollars(order.totalAfterDiscount)}
