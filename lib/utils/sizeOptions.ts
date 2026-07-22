@@ -56,15 +56,17 @@ export function formatQuantityLabel(
   return `${quantity}× ${shownAs ?? "ea"}`;
 }
 
-// Cart +/- climbs this ladder regardless of which preset was originally picked:
-// 1,2,4,8 (doubling up to the 8x/28g preset), then +8 per rung after that
-// (16,24,32,... i.e. flat +28g increments once past the ounce).
+// Cart +/- climbs by a flat 7g (2 multiplier units) once past the initial
+// 3.5g->7g jump: 3.5,7,14,21,28(1oz),35(1oz 7g),42(1oz 14g),... — no more
+// doubling-then-flat-28g-jump, which produced uneven/oversized steps.
 export function nextMultiplier(current: number): number {
-  return current < 8 ? current * 2 : current + 8;
+  return current < 2 ? 2 : current + 2;
 }
 
-// Returns 0 to signal "remove from cart".
+// Returns 0 to signal "remove from cart". Mirrors nextMultiplier: steps back
+// down by 2 (7g) at a time, landing on 1 (3.5g) as the floor before removal.
 export function prevMultiplier(current: number): number {
   if (current <= 1) return 0;
-  return current <= 8 ? current / 2 : current - 8;
+  if (current <= 2) return 1;
+  return current - 2;
 }
