@@ -218,6 +218,12 @@ export const orders = pgTable("orders", {
 
   mongoId: varchar("mongo_id", { length: 50 }).unique(),
 
+  // Last admin-triggered delivery-update SMS ("20min"/"10min"/"5min"/"here")
+  // — console-logged only for now, see admin.ts. Nullable until the first one
+  // is sent for this order.
+  lastDeliveryUpdateStage: varchar("last_delivery_update_stage", { length: 20 }),
+  lastDeliveryUpdateAt: timestamp("last_delivery_update_at", { withTimezone: true }),
+
   completedAt: timestamp("completed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
