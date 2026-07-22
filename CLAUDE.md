@@ -203,6 +203,21 @@ The `fetchRequestHandler` adapter reads `ctx.resHeaders` and attaches them to th
 
 ---
 
+## Client-Side Caching (tRPC / React Query)
+
+This runs on a single EC2 instance — every avoidable database round-trip is avoidable CPU/memory pressure on both the app server and Postgres. React Query's default is stale-immediately + refetch-on-every-mount-or-window-focus, which on a persistent component like `Header` (rendered on literally every page) means constant redundant queries for data that doesn't change second-to-second.
+
+- **Global default:** `app/providers.tsx` sets `staleTime: 30_000` on the `QueryClient` — this is the baseline for every `useQuery` in the app unless overridden. Don't remove it; don't add a per-query `staleTime` that just re-specifies the same 30s, that's noise.
+- **Override longer (or `Infinity`) for genuinely static data** — enums, reference tables that don't change at runtime (e.g. `admin.orderStatuses`, districts). Use `staleTime: Infinity` for compile-time-fixed values like enums.
+- **Override to `staleTime: 0`** for anything the user is about to act on where stale data would cause a wrong action — e.g. the Approvals page's pending-addresses/accounts lists, where an admin approving/rejecting needs the true current queue, not a cached one. This is the exception, not the default — most lists don't need it.
+- **Invalidation still has to be correct and complete.** A cache window only works if every mutation that changes a piece of data invalidates *every* query that displays it, not just the one on the page the mutation happened on. Before adding a new mutation (or a new query that reads data another mutation can change), check what else reads that data and add it to the `invalidate()` calls. Two bugs of exactly this shape were found and fixed while adding the cache window itself:
+  - Changing an order's status only invalidated the order-detail query — the orders list and the admin nav's "new orders" badge count both also depend on status and weren't being refreshed.
+  - Placing an order changes the user's points balance but never invalidated `users.me` — the profile page could show a stale balance after checkout.
+
+  `invalidate()` always bypasses `staleTime` and forces an immediate refetch, so this costs nothing in extra caching complexity — it's purely a "did you find every reader" discipline problem, not a tradeoff.
+
+---
+
 ## Schema Summary
 
 Enums: `orderStatusEnum`, `productTypeEnum`, `unitOfMeasureEnum`
