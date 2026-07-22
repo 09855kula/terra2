@@ -28,6 +28,8 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [addingAddress, setAddingAddress] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
+  const [devBypassCutoff, setDevBypassCutoff] = useState(false);
+  const isDev = process.env.NODE_ENV !== "production";
   const [selectedWindow, setSelectedWindow] = useState<DeliveryWindow | null>(null);
   const [change, setChange] = useState("No change");
   const [customChange, setCustomChange] = useState("");
@@ -53,7 +55,7 @@ export default function CheckoutPage() {
   const districtSchedules = selectedAddress?.districtId
     ? schedules.filter((s) => s.districtId === selectedAddress.districtId)
     : schedules;
-  const windows = getAvailableWindows(districtSchedules);
+  const windows = getAvailableWindows(districtSchedules, { bypassCutoff: isDev && devBypassCutoff });
 
   // Mirrors each step's own "Next" gating — the arrows can't skip ahead of data we don't have yet.
   const canAdvanceFrom = (s: Step) => {
@@ -225,6 +227,17 @@ export default function CheckoutPage() {
       {step === 2 && (
         <SectionCard label="Delivery window">
           <div className="p-4 space-y-3">
+            {isDev && (
+              <label className="flex items-center gap-2 text-xs text-[#616A5C] opacity-70 bg-[#F7F7F7] rounded-lg px-3 py-2">
+                <input
+                  type="checkbox"
+                  checked={devBypassCutoff}
+                  onChange={(e) => setDevBypassCutoff(e.target.checked)}
+                  className="w-3.5 h-3.5 accent-[#37751A]"
+                />
+                Dev: ignore cutoff, always allow &quot;Today&quot;
+              </label>
+            )}
             {windows.length === 0 ? (
               <p className="text-[#616A5C] text-sm text-center py-4">
                 No delivery windows available today or tomorrow.

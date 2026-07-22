@@ -63,7 +63,10 @@ interface RawSchedule {
   windowEnd: string | null;
 }
 
-export function getAvailableWindows(schedules: RawSchedule[]): DeliveryWindow[] {
+export function getAvailableWindows(
+  schedules: RawSchedule[],
+  options?: { bypassCutoff?: boolean }
+): DeliveryWindow[] {
   const now = getNowInWinnipeg();
   const windows: DeliveryWindow[] = [];
 
@@ -81,7 +84,7 @@ export function getAvailableWindows(schedules: RawSchedule[]): DeliveryWindow[] 
       const [h, m] = start.split(":").map(Number);
       const windowStartTime = new Date(date);
       windowStartTime.setHours(h, m, 0, 0);
-      const isPast = offset === 0 && now >= windowStartTime;
+      const isPast = !options?.bypassCutoff && offset === 0 && now >= windowStartTime;
 
       windows.push({
         scheduleId: s.id,
