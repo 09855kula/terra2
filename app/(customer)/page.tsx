@@ -24,14 +24,14 @@ export default function MenuPage() {
     <div className="flex flex-col flex-1 pb-24">
       {/* Category tabs */}
       <div className="sticky top-[70px] z-30 bg-[#f3f3f3] border-b border-[#e0e8dc] overflow-x-auto scrollbar-none">
-        <div className="flex h-12 min-w-max px-4 gap-1 items-center">
+        <div className="flex h-[72px] min-w-max px-4 gap-1.5 items-center xl:justify-center">
           {groups.map((g) => {
             const isActive = g.id === groupId;
             return (
               <button
                 key={g.id}
                 onClick={() => setActiveGroupId(g.id)}
-                className={`px-4 py-1.5 rounded-full text-[13px] font-semibold whitespace-nowrap transition-colors ${
+                className={`px-6 py-2.5 rounded-full text-[19px] font-semibold whitespace-nowrap transition-colors ${
                   isActive
                     ? "bg-[#6CAC4F] text-white"
                     : "text-[#4F9528] hover:bg-[#EFF8DD]"
