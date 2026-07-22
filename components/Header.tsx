@@ -1,11 +1,18 @@
 "use client";
 import Link from "next/link";
 import { useCart } from "@/lib/store/cart";
+import { trpc } from "@/lib/trpc/client";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ShoppingBag01Icon, User02Icon, PackageDelivered01Icon } from "@hugeicons/core-free-icons";
+import {
+  ShoppingBag01Icon,
+  User02Icon,
+  PackageDelivered01Icon,
+  UserShield01Icon,
+} from "@hugeicons/core-free-icons";
 
 export function Header() {
   const itemCount = useCart((s) => s.itemCount());
+  const { data: me } = trpc.users.me.useQuery();
 
   return (
     <header
@@ -31,6 +38,15 @@ export function Header() {
           <Link href="/profile" className="p-2 text-white/90 hover:text-white transition-colors">
             <HugeiconsIcon icon={User02Icon} size={24} color="currentColor" />
           </Link>
+          {me?.isAdmin && (
+            <Link
+              href="/admin/orders"
+              className="p-2 text-white/90 hover:text-white transition-colors"
+              title="Admin panel"
+            >
+              <HugeiconsIcon icon={UserShield01Icon} size={24} color="currentColor" />
+            </Link>
+          )}
         </div>
       </div>
     </header>

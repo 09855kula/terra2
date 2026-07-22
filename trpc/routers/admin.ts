@@ -8,7 +8,7 @@ import {
   pointTransactions,
   orderStatusEnum,
 } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
@@ -41,6 +41,25 @@ export const adminRouter = router({
   orderStatuses: adminProcedure.query(() => orderStatusEnum.enumValues),
 
   orders: router({
+    // Newest-first only — no ETA-based reordering here, that's a separate
+    // list-view concern.
+    list: adminProcedure.query(async () => {
+      return db
+        .select({
+          id: orders.id,
+          orderNumber: orders.orderNumber,
+          status: orders.status,
+          totalAfterDiscount: orders.totalAfterDiscount,
+          createdAt: orders.createdAt,
+          customerFirstName: users.firstName,
+          customerLastName: users.lastName,
+        })
+        .from(orders)
+        .innerJoin(users, eq(orders.userId, users.id))
+        .orderBy(desc(orders.createdAt))
+        .limit(50);
+    }),
+
     byId: adminProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
