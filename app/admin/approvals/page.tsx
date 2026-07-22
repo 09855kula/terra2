@@ -160,9 +160,11 @@ function AccountCard({ account }: { account: PendingAccount }) {
 export default function ApprovalsPage() {
   const [tab, setTab] = useState<Tab>("addresses");
 
-  const addresses = trpc.admin.approvals.addresses.useQuery();
-  const accounts = trpc.admin.approvals.accounts.useQuery();
-  // Districts are static reference data — no need to refetch on every mount/focus.
+  // This is an active work queue — override the global 30s default so an
+  // admin approving/rejecting through the list doesn't act on a stale view.
+  const addresses = trpc.admin.approvals.addresses.useQuery(undefined, { staleTime: 0 });
+  const accounts = trpc.admin.approvals.accounts.useQuery(undefined, { staleTime: 0 });
+  // Districts are static reference data — cache much longer than the default.
   const districts = trpc.admin.approvals.districts.useQuery(undefined, { staleTime: 5 * 60_000 });
 
   const addressCount = addresses.data?.length ?? 0;
