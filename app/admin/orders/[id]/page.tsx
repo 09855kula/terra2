@@ -157,9 +157,9 @@ export default function AdminOrderDetailPage({
             </span>
           </div>
           {order.change && (
-            <div className="flex justify-between text-sm pt-1">
+            <div className="flex justify-between items-center pt-1">
               <span className="text-[#616A5C] opacity-70">Change needed</span>
-              <span className="text-[#616A5C] font-medium">{order.change}</span>
+              <span className="text-orange-600 font-bold text-xl">{order.change}</span>
             </div>
           )}
         </div>
