@@ -36,7 +36,6 @@ export default function CheckoutPage() {
   const [error, setError] = useState("");
 
   const { data: me } = trpc.users.me.useQuery();
-  const { data: schedules = [] } = trpc.orders.getDeliverySchedules.useQuery();
 
   const [orderPlaced, setOrderPlaced] = useState(false);
 
@@ -51,11 +50,9 @@ export default function CheckoutPage() {
 
   const addresses = me?.addresses ?? [];
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
-  // Delivery windows are district-agnostic to the customer — district is an
-  // admin/driver-routing concern, not something that gates which windows a
-  // customer can pick. getAvailableWindows collapses same-time schedules
-  // across districts/drivers into one row per distinct window.
-  const windows = getAvailableWindows(schedules, { bypassCutoff: isDev && devBypassCutoff });
+  // One fixed window per day (weekday evening / weekend midday) — district-
+  // and driver-schedule-agnostic to the customer.
+  const windows = getAvailableWindows({ bypassCutoff: isDev && devBypassCutoff });
 
   // Mirrors each step's own "Next" gating — the arrows can't skip ahead of data we don't have yet.
   const canAdvanceFrom = (s: Step) => {
@@ -222,13 +219,10 @@ export default function CheckoutPage() {
               </p>
             ) : (
               windows.map((w) => {
-                const key = `${w.scheduleId}-${w.dateLabel}`;
-                const isSelected =
-                  selectedWindow?.scheduleId === w.scheduleId &&
-                  selectedWindow?.dateLabel === w.dateLabel;
+                const isSelected = selectedWindow?.dateLabel === w.dateLabel;
                 return (
                   <button
-                    key={key}
+                    key={w.dateLabel}
                     onClick={() => !w.isPast && setSelectedWindow(w)}
                     disabled={w.isPast}
                     className={`w-full text-left rounded-xl border-[2px] px-4 py-3 transition-colors ${

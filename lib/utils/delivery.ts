@@ -54,7 +54,6 @@ export function formatTime12h(time: string): string {
 }
 
 export interface DeliveryWindow {
-  scheduleId: number;
   dayOfWeek: number;
   windowStart: string;
   windowEnd: string;
@@ -64,20 +63,18 @@ export interface DeliveryWindow {
   isPast: boolean;
 }
 
-interface RawSchedule {
-  id: number;
-  dayOfWeek: number;
-  windowStart: string | null;
-  windowEnd: string | null;
+// A day has exactly one delivery window — weekday evenings, weekend midday.
+// Hardcoded business rule ("for now", per Travis) rather than driven by
+// deliverySchedules, which is per-driver/per-district and stays that way for
+// admin/driver-routing purposes — it just no longer determines what a
+// customer can pick.
+function windowForDate(date: Date): { start: string; end: string } {
+  const dow = date.getDay();
+  const isWeekend = dow === 0 || dow === 6;
+  return isWeekend ? { start: "12:00", end: "15:00" } : { start: "18:00", end: "21:00" };
 }
 
-// Delivery windows are district-agnostic from the customer's point of view —
-// every district/driver's schedule for a given day collapses into one row per
-// distinct start/end time, not one row per district or driver.
-export function getAvailableWindows(
-  schedules: RawSchedule[],
-  options?: { bypassCutoff?: boolean }
-): DeliveryWindow[] {
+export function getAvailableWindows(options?: { bypassCutoff?: boolean }): DeliveryWindow[] {
   const now = getNowInWinnipeg();
   const windows: DeliveryWindow[] = [];
 
@@ -85,35 +82,22 @@ export function getAvailableWindows(
     const date = new Date(now);
     date.setDate(now.getDate() + offset);
     date.setHours(0, 0, 0, 0);
-    const dow = date.getDay();
 
-    const daySchedules = schedules.filter((s) => s.dayOfWeek === dow);
+    const { start, end } = windowForDate(date);
+    const [h, m] = start.split(":").map(Number);
+    const windowStartTime = new Date(date);
+    windowStartTime.setHours(h, m, 0, 0);
+    const isPast = !options?.bypassCutoff && offset === 0 && now >= windowStartTime;
 
-    const seen = new Map<string, RawSchedule>();
-    for (const s of daySchedules) {
-      const key = `${s.windowStart ?? "00:00"}-${s.windowEnd ?? "23:59"}`;
-      if (!seen.has(key)) seen.set(key, s);
-    }
-
-    for (const s of seen.values()) {
-      const start = s.windowStart ?? "00:00";
-      const end = s.windowEnd ?? "23:59";
-      const [h, m] = start.split(":").map(Number);
-      const windowStartTime = new Date(date);
-      windowStartTime.setHours(h, m, 0, 0);
-      const isPast = !options?.bypassCutoff && offset === 0 && now >= windowStartTime;
-
-      windows.push({
-        scheduleId: s.id,
-        dayOfWeek: dow,
-        windowStart: start,
-        windowEnd: end,
-        label: `${formatTime12h(start)} – ${formatTime12h(end)}`,
-        date: new Date(date),
-        dateLabel: formatDateLabel(date),
-        isPast,
-      });
-    }
+    windows.push({
+      dayOfWeek: date.getDay(),
+      windowStart: start,
+      windowEnd: end,
+      label: `${formatTime12h(start)} – ${formatTime12h(end)}`,
+      date: new Date(date),
+      dateLabel: formatDateLabel(date),
+      isPast,
+    });
   }
 
   return windows;

@@ -3,7 +3,6 @@ import { db } from "@/db";
 import {
   orders,
   orderItems,
-  deliverySchedules,
   userAddresses,
   users,
   products,
@@ -22,18 +21,6 @@ function calcPointsEarned(totalDollars: number, isVip: boolean): number {
 }
 
 export const ordersRouter = router({
-  getDeliverySchedules: protectedProcedure.query(async () => {
-    return db
-      .select({
-        id: deliverySchedules.id,
-        dayOfWeek: deliverySchedules.dayOfWeek,
-        windowStart: deliverySchedules.windowStart,
-        windowEnd: deliverySchedules.windowEnd,
-        districtId: deliverySchedules.districtId,
-      })
-      .from(deliverySchedules);
-  }),
-
   getActive: protectedProcedure.query(async ({ ctx }) => {
     const [order] = await db
       .select()
