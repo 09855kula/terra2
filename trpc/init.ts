@@ -43,3 +43,8 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 });
+
+export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  if (!ctx.user.isAdmin) throw new TRPCError({ code: "FORBIDDEN" });
+  return next({ ctx });
+});
