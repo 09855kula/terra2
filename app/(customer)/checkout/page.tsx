@@ -52,9 +52,11 @@ export default function CheckoutPage() {
 
   const addresses = me?.addresses ?? [];
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
+  // Every district has its own driver/window schedule — an address without a
+  // district can't be scoped to any of them, so it gets none (not all of them).
   const districtSchedules = selectedAddress?.districtId
     ? schedules.filter((s) => s.districtId === selectedAddress.districtId)
-    : schedules;
+    : [];
   const windows = getAvailableWindows(districtSchedules, { bypassCutoff: isDev && devBypassCutoff });
 
   // Mirrors each step's own "Next" gating — the arrows can't skip ahead of data we don't have yet.
@@ -240,7 +242,11 @@ export default function CheckoutPage() {
             )}
             {windows.length === 0 ? (
               <p className="text-[#616A5C] text-sm text-center py-4">
-                No delivery windows available today or tomorrow.
+                {selectedAddress && !selectedAddress.districtId ? (
+                  <>This address is missing a delivery zone — go back and edit it to add one.</>
+                ) : (
+                  "No delivery windows available today or tomorrow."
+                )}
               </p>
             ) : (
               windows.map((w) => {

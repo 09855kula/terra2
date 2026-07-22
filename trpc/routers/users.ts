@@ -40,7 +40,7 @@ export const usersRouter = router({
         address: z.string().min(5),
         label: z.string().optional(),
         notes: z.string().optional(),
-        districtId: z.number().optional(),
+        districtId: z.number(),
         isPrimary: z.boolean().default(false),
       })
     )
@@ -65,7 +65,7 @@ export const usersRouter = router({
         address: z.string().min(5),
         label: z.string().optional(),
         notes: z.string().optional(),
-        districtId: z.number().optional(),
+        districtId: z.number(),
         isPrimary: z.boolean().default(false),
       })
     )

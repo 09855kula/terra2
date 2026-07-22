@@ -57,11 +57,15 @@ export function AddressForm({
       setError("Enter a full delivery address");
       return;
     }
+    if (districtId === null) {
+      setError("Select a district so we can match your delivery schedule");
+      return;
+    }
     const payload = {
       address: address.trim(),
       label: label.trim() || undefined,
       notes: notes.trim() || undefined,
-      districtId: districtId ?? undefined,
+      districtId,
     };
     if (isEditing) {
       updateAddress.mutate({ id: initial.id!, ...payload });
@@ -91,7 +95,7 @@ export function AddressForm({
         onChange={(e) => setDistrictId(e.target.value ? Number(e.target.value) : null)}
         className={inputClass}
       >
-        <option value="">Select district (for delivery scheduling)</option>
+        <option value="">Select district (required for delivery scheduling)</option>
         {districts.map((d) => (
           <option key={d.id} value={d.id}>{d.name ?? d.code}</option>
         ))}
