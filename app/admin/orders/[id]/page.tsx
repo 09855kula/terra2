@@ -59,11 +59,13 @@ export default function AdminOrderDetailPage({
         </span>
       </div>
 
-      {/* Delivery update */}
-      <Card className="px-5 py-4 space-y-3">
-        <SectionLabel>Delivery update</SectionLabel>
-        <DeliveryUpdateButtons orderId={order.id} />
-      </Card>
+      {/* Delivery update — only meaningful once the order is being fulfilled */}
+      {order.status === "accepted" && (
+        <Card className="px-5 py-4 space-y-3">
+          <SectionLabel>Delivery update</SectionLabel>
+          <DeliveryUpdateButtons orderId={order.id} />
+        </Card>
+      )}
 
       {/* Customer */}
       <Card className="px-5 py-4 space-y-1">
